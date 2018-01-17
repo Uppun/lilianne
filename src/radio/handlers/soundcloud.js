@@ -5,23 +5,30 @@ import * as qs from 'querystring';
 const fetch = require('node-fetch'); // FIXME needs babel for es6 module support
 
 import { Writable } from 'stream';
-import { HandlerImpl, SongInfo } from '../handlers';
-import { ConfigOptions } from '../..';
+import { Handler, SongInfo } from '../handlers';
+import type { ConfigOptions } from '../..';
 
-export default class SoundCloud implements HandlerImpl {
+export default class SoundCloud implements Handler {
   static match(link: string) {
     const parse = parseUrl(link);
-    return (parse.hostname === 'snd.sc' || /(www\.)?soundcloud\.com/.test(parse.hostname));
+    return (parse.hostname === 'snd.sc' || /(www\.)?soundcloud\.com/.test(String(parse.hostname)));
   }
 
   stream_url: string;
   key: string;
+  link: string;
 
-  constructor(public link: string, config: ConfigOptions['services']) {
-    this.key = (config && config.soundcloud && config.soundcloud.client_id) || '';
+  constructor(link: string, config: $PropertyType<ConfigOptions, 'services'>) {
+    if (config && config.soundcloud && config.soundcloud.client_id){
+      this.key = (config && String(config.soundcloud) && String(config.soundcloud.client_id));
+    }
+    else {
+      this.key = '';
+    }
+    this.link = link;
   }
 
-  getMeta(cb: (error: Error, song?: SongInfo) => void) {
+  getMeta(cb: (error: ?Error, song?: SongInfo) => void) {
     if (!this.key) {
       process.nextTick(cb, new Error('no SoundCloud API key provided'));
       return;

@@ -3,8 +3,8 @@
 import * as Discord from 'discord.js';
 
 import Web from '.';
-import Radio, { SongInfoExtended, QueueItem, UserInfo, trimUser } from '../radio';
-
+import Radio, { SongInfoExtended, UserInfo, trimUser } from '../radio';
+import type {QueueItem} from '../radio';
 export default function webapp(web: Web) {
   const { base, io } = web;
   const { radio } = base;
@@ -51,21 +51,22 @@ export default function webapp(web: Web) {
     }
 
     const { id } = socket.request.session.passport.user;
-    if (!base.bot.server.members.has(id)) {
+    const currentServer = base.bot.server;
+    if (!base.bot.server.members.has(id) && base.bot.voiceChannel) {
       socket.emit('app error', {
         type: 'not in server',
         user: socket.request.session.passport.user,
         server: {
-          id: base.bot.server.id,
-          name: base.bot.server.name,
-          icon: base.bot.server.icon,
-          channel: base.bot.voiceChannel!.name, // TODO
+          id: currentServer.id,
+          name: currentServer.name,
+          icon: currentServer.icon,
+          channel: base.bot.voiceChannel.name, // TODO
         },
       });
       return;
     }
 
-    const member = base.bot.server.members.get(id);
+    const member = currentServer.members.get(id);
     if (!member) return; // TODO
     const { user } = member;
 
@@ -125,18 +126,20 @@ export default function webapp(web: Web) {
     // SEND INIT
     if (current) current.player.currentTime = Date.now();
     const queue = radio.queues.get(id) || [];
-    socket.emit('load', {
-      id,
-      server: {
-        id: base.bot.server.id,
-        name: base.bot.server.name,
-        icon: base.bot.server.icon,
-        channel: base.bot.voiceChannel!.name, // TODO
-      },
-      order,
-      queue: queue.map(({ fp, ...item }) => item),
-      current,
-      history: radio.history,
-    });
+    if(base.bot.server && base.bot.voiceChannel){
+      socket.emit('load', {
+        id,
+        server: {
+          id: base.bot.server.id,
+          name: base.bot.server.name,
+          icon: base.bot.server.icon,
+          channel: base.bot.voiceChannel.name, // TODO
+        },
+        order,
+        queue: queue.map(({ fp, ...item }) => item),
+        current,
+        history: radio.history,
+      });
+    }
   });
 };

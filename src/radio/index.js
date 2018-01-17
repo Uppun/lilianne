@@ -12,7 +12,8 @@ import * as mkdirp from 'mkdirp';
 import * as Discord from 'discord.js';
 
 import Application from '..';
-import handlers, { SongInfo } from './handlers';
+import handlers from './handlers';
+import type { SongInfo } from './handlers';
 import replaygain from './replaygain.js';
 
 export interface SongInfoExtended extends SongInfo {

@@ -3,20 +3,21 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { Writable } from 'stream';
-import { ConfigOptions } from '..';
+import type { ConfigOptions } from '..';
+import soundcloud from './handlers/soundcloud';
+import youtube from './handlers/youtube';
 
-const handlers: AbstractHandler[] = [];
+const handlers: Array<Class<Handler>> = [
+  soundcloud,
+  youtube,
+];
 
-interface AbstractHandler {
-  new (link: string, config: ConfigOptions['services']): HandlerImpl;
-  match(link: string): boolean;
-}
-
-export interface HandlerImpl {
-  getMeta(cb: (error: Error, song?: SongInfo) => void): void;
+export interface Handler {
+  /*constructor(link: string, config: $PropertyType<ConfigOptions, 'services'>): Handler;*/
+  /*static match(link: string): boolean;*/
+  getMeta(cb: (error: ?Error, song?: SongInfo)=> void): void;
   download(stream: Writable): Writable;
 }
-
 export interface SongInfo {
   id: string,
   title: string,
@@ -30,20 +31,12 @@ export interface SongInfo {
   },
 }
 
-const base = path.join(__dirname, 'handlers');
-for (const file of fs.readdirSync(base)) {
-  try {
-    if (file.startsWith('.')) continue;
-    const handler = <AbstractHandler>require(path.join(base, file)).default;
-    handlers.push(handler);
-  } catch (e) {
-    console.warn(`[media] error loading ${file}: ${e.message}`);
-  }
-}
 
 export default function getHandler(link: string, config: ConfigOptions) {
   for (const handler of handlers) {
+    //$FlowFixMe
     if (handler.match(link)) {
+      //$FlowFixMe
       return new handler(link, config.services);
     }
   }

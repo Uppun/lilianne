@@ -9,7 +9,7 @@ import Radio from './radio/index';
 import Web from './web/index';
 import Bot from './discord/index';
 
-export interface ConfigOptions {
+export type ConfigOptions = {
   discord: {
     oauth2: {
       client_id: string,

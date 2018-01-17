@@ -31,7 +31,7 @@ const SCOPES = ['identify'];
 
 // EXPORTS
 export default class Web {
-  io: SocketIO.Server;
+  io: SocketIO$Server;
   server: http.Server | https.Server;
   base: Application;
 
@@ -64,7 +64,7 @@ export default class Web {
 
       app.use((req, res, next) => {
         if (force || req.secure) {
-          let header = 'max-age=' + maxAge;
+          let header = 'max-age=' + String(maxAge);
           if (includeSubDomains) header += '; includeSubDomains';
           if (preload) header += '; preload';
           res.setHeader('Strict-Transport-Security', header);
