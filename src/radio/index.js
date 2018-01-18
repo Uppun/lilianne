@@ -8,8 +8,8 @@ import events from 'events';
 const { EventEmitter } = events; 
 
 import uuid from 'uuid/v4';
-import * as mkdirp from 'mkdirp';
-import * as Discord from 'discord.js';
+import mkdirp from 'mkdirp';
+import Discord from 'discord.js';
 
 import Application from '..';
 import handlers from './handlers';

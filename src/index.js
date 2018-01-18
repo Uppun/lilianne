@@ -2,8 +2,8 @@
 
 if (process.env.NODE_ENV !== 'production') process.env.NODE_ENV = 'development';
 
-import * as path from 'path';
-import * as redis from 'redis';
+import path from 'path';
+import redis from 'redis';
 
 import Radio from './radio/index';
 import Web from './web/index';

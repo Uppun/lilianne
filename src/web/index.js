@@ -15,11 +15,11 @@ import connect_redis from 'connect-redis';
 const RedisStore = connect_redis(express_session);
 
 // passport
-import * as passport from 'passport';
+import passport from 'passport';
 const DiscordStrategy = require('passport-discord');
 
 // socket.io
-import * as socket_io from 'socket.io';
+import socket_io from 'socket.io';
 
 // app
 import Application from '..';
