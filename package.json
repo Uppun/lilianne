@@ -11,9 +11,9 @@
   ],
   "main": "lib/index.js",
   "scripts": {
-    "build": "npm run tsc && npm run webpack",
+    "build": "npm run build-server && npm run webpack",
     "prepublish": "npm run build",
-    "tsc": "tsc -p .",
+    "build-server": "babel src/ -d lib/",
     "webpack": "webpack --config web/config/webpack.config.prod.js"
   },
   "dependencies": {
@@ -45,9 +45,14 @@
     "@types/socket.io": "^1.4.29",
     "@types/uuid": "^3.0.0",
     "autoprefixer": "^7.1.1",
+    "babel-cli": "^6.26.0",
     "babel-core": "^6.24.1",
     "babel-eslint": "^7.2.3",
     "babel-loader": "^7.0.0",
+    "babel-plugin-transform-class-properties": "^6.24.1",
+    "babel-plugin-transform-object-rest-spread": "^6.26.0",
+    "babel-preset-env": "^1.6.1",
+    "babel-preset-flow": "^6.23.0",
     "babel-preset-react-app": "^3.0.0",
     "classnames": "^2.2.5",
     "css-loader": "^0.28.4",
