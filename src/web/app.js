@@ -1,6 +1,6 @@
 /* @flow */
 
-import * as Discord from 'discord.js';
+import Discord from 'discord.js';
 
 import Web from '.';
 import Radio, { SongInfoExtended, UserInfo, trimUser } from '../radio';

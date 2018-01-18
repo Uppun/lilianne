@@ -4,7 +4,7 @@ import events from 'events';
 
 const { EventEmitter } = events;
 
-import * as Discord from 'discord.js';
+import Discord from 'discord.js';
 
 import Application from '..';
 

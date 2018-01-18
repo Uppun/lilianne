@@ -1,6 +1,6 @@
 /* @flow */
 
-import * as path from 'path';
+import path from 'path';
 import { static as serveStatic, Express } from 'express';
 
 export default function serve(app: Express) {

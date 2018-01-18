@@ -1,7 +1,7 @@
 /* @flow */
 
 import { parse as parseUrl } from 'url';
-import * as ytdl from 'ytdl-core';
+import ytdl from 'ytdl-core';
 
 import { Writable } from 'stream';
 import { Handler, SongInfo } from '../handlers';

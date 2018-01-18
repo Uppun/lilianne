@@ -1,11 +1,11 @@
 /* @flow */
 
 // REQUIRES
-import * as fs from 'fs';
-import * as url from 'url';
-import * as http from 'http';
-import * as path from 'path';
-import * as https from 'https';
+import fs from 'fs';
+import url from 'url';
+import http from 'http';
+import path from 'path';
+import https from 'https';
 
 // express
 import express from 'express';
