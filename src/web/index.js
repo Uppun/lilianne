@@ -4,22 +4,20 @@
 import fs from 'fs';
 import url from 'url';
 import http from 'http';
-import path from 'path';
 import https from 'https';
 
 // express
 import express from 'express';
 import compression from 'compression';
-import express_session from 'express-session';
-import connect_redis from 'connect-redis';
-const RedisStore = connect_redis(express_session);
+import expressSession from 'express-session';
+import connectRedis from 'connect-redis';
 
 // passport
 import passport from 'passport';
-const DiscordStrategy = require('passport-discord');
+import DiscordStrategy from 'passport-discord';
 
 // socket.io
-import socket_io from 'socket.io';
+import socketIo from 'socket.io';
 
 // app
 import Application from '..';
@@ -27,6 +25,8 @@ import webapp from './app';
 import serve from './serve';
 
 // CONSTANTS
+const RedisStore = connectRedis(expressSession);
+
 const SCOPES = ['identify'];
 
 // EXPORTS
@@ -51,7 +51,7 @@ export default class Web {
             app
           )
         : http.createServer(app);
-    const io = socket_io(server, {serveClient: false});
+    const io = socketIo(server, {serveClient: false});
 
     // SECURITY
     app.disable('x-powered-by');
@@ -81,7 +81,7 @@ export default class Web {
     }
 
     // SESSIONS
-    const store = express_session({
+    const store = expressSession({
       store: new RedisStore({client: base.db, ttl: 7 * 24 * 60 * 60}),
       secret: 'Magical Girls represent!',
       resave: false,

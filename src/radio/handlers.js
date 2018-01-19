@@ -1,7 +1,5 @@
 /* @flow */
 
-import fs from 'fs';
-import path from 'path';
 import {Writable} from 'stream';
 import type {ConfigOptions} from '..';
 import soundcloud from './handlers/soundcloud';
@@ -30,11 +28,11 @@ export interface SongInfo {
 }
 
 export default function getHandler(link: string, config: ConfigOptions) {
-  for (const handler of handlers) {
+  for (const Handler of handlers) {
     // $FlowFixMe
-    if (handler.match(link)) {
+    if (Handler.match(link)) {
       // $FlowFixMe
-      return new handler(link, config.services);
+      return new Handler(link, config.services);
     }
   }
   return null;

@@ -1,4 +1,5 @@
 /* @flow */
+/* eslint-disable import/first */
 
 if (process.env.NODE_ENV !== 'production') process.env.NODE_ENV = 'development';
 
@@ -76,4 +77,5 @@ export default class Application {
   }
 }
 
+// eslint-disable-next-line no-new
 if (require.main === module) new Application();

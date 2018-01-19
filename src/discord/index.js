@@ -25,18 +25,6 @@ function timeStr(s: number) {
   }
 }
 
-function humanize(n: number) {
-  const trunc = (n: number) => Number(Number(n).toPrecision(3));
-
-  const prefixes = ['', 'k', 'm', 'b', 't', 'q'];
-  n = trunc(n);
-  while (n > 1000 && prefixes.length > 0) {
-    n = trunc(n / 1000);
-    prefixes.shift();
-  }
-  return n + prefixes.shift();
-}
-
 export default class Bot extends EventEmitter {
   client: Discord.Client;
   server: Discord.Guild | null;

@@ -1,11 +1,9 @@
-/* eslint-disable no-param-reassign, no-shadow */
 /* @flow */
+/* eslint-disable no-param-reassign, no-shadow */
 
 import fs from 'fs';
 import path from 'path';
 import events from 'events';
-
-const {EventEmitter} = events;
 
 import uuid from 'uuid/v4';
 import mkdirp from 'mkdirp';
@@ -14,7 +12,9 @@ import Discord from 'discord.js';
 import Application from '..';
 import handlers from './handlers';
 import type {SongInfo} from './handlers';
-import replaygain from './replaygain.js';
+import replaygain from './replaygain';
+
+const {EventEmitter} = events;
 
 export interface SongInfoExtended extends SongInfo {
   service: string;
@@ -33,11 +33,6 @@ export interface UserInfo {
   id: string;
   avatar: string;
 }
-
-const getUid = (() => {
-  let uid = 0;
-  return () => uid++;
-})();
 
 function skipRatio(length: number) {
   const minutes = length / 60;
@@ -84,7 +79,8 @@ class Radio extends EventEmitter {
     this.history = [];
     this.skips = new Set();
 
-    app.db.lrange('radio:history', 0, 19, (err: Error, res?: any[]) => {
+    // eslint-disable-next-line handle-callback-err
+    app.db.lrange('radio:history', 0, 19, (err: Error, res?: string[]) => {
       if (res) {
         this.history = res.map(s => JSON.parse(s));
         this.emit('history', this.history);
@@ -143,7 +139,6 @@ class Radio extends EventEmitter {
     if (!this.current) return false;
 
     const ratio = skipRatio(this.current.duration);
-    const skipped = this.skips.size;
     const total = this.order.length;
     const needed = Math.ceil(ratio * total);
     this.emit('skips', this.skips, needed);

@@ -1,4 +1,5 @@
 /* @flow */
+/* eslint-disable camelcase */
 
 import {URL, parse as parseUrl} from 'url';
 import qs from 'querystring';

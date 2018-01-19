@@ -3,7 +3,7 @@
 import Discord from 'discord.js';
 
 import Web from '.';
-import Radio, {SongInfoExtended, UserInfo, trimUser} from '../radio';
+import {SongInfoExtended, UserInfo, trimUser} from '../radio';
 import type {QueueItem} from '../radio';
 export default function webapp(web: Web) {
   const {base, io} = web;
@@ -32,7 +32,7 @@ export default function webapp(web: Web) {
     io.emit('order', order);
   });
 
-  radio.on('queue', (user, queue) => {
+  radio.on('queue', (_user, _queue) => {
     // ?
   });
 
@@ -74,7 +74,7 @@ export default function webapp(web: Web) {
     // RADIO HOOKS
     function onQueue(u: Discord.User, queue: QueueItem[]) {
       if (u.id !== user.id) return;
-      socket.emit('queue', queue.map(({fp, ...item}) => item));
+      socket.emit('queue', queue.map(({fp, ...item}) => item)); // eslint-disable-line no-unused-vars
     }
 
     radio.on('queue', onQueue);
@@ -137,7 +137,7 @@ export default function webapp(web: Web) {
           channel: voiceChannel.name, // TODO
         },
         order,
-        queue: queue.map(({fp, ...item}) => item),
+        queue: queue.map(({fp, ...item}) => item), // eslint-disable-line no-unused-vars
         current,
         history: radio.history,
       });
