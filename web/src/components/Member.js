@@ -15,7 +15,7 @@ export default function Member(props) {
       <UserAvatar user={props.id} avatar={props.avatar} />
       <div className="member-inner">
         <div className="member-username">
-          <span className="member-username-inner">🐇 {props.name}</span>
+          <span className="member-username-inner">{props.name}</span>
         </div>
       </div>
     </div>
