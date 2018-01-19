@@ -2,11 +2,11 @@
 
 import events from 'events';
 
-const { EventEmitter } = events;
-
 import Discord from 'discord.js';
 
 import Application from '..';
+
+const { EventEmitter } = events;
 
 const BASELINE_DB = -16;
 
@@ -58,8 +58,9 @@ export default class Bot extends EventEmitter {
     this.voiceConnection = null;
 
     const setTopic = () => {
-      if (!this.chatChannel) return;
-      if (!this.chatChannel.permissionsFor(bot.user).has('MANAGE_CHANNELS')) return;
+      const { chatChannel } = this;
+      if (!chatChannel) return;
+      if (!chatChannel.permissionsFor(bot.user).has('MANAGE_CHANNELS')) return;
 
       const $current = radio.current;
       const $order = radio.order;
@@ -80,16 +81,16 @@ export default class Bot extends EventEmitter {
           return (q && q.length > 0) ? `__${u.username}__` : u.username;
         }).join(', ');
       }
-      if(this.chatChannel){
-        this.chatChannel.setTopic([np, dj].join(' // '));
-      }
+      chatChannel.setTopic([np, dj].join(' // '));
     };
 
     bot.on('ready', () => {
-      this.server = bot.guilds.get(app.config.discord.bot.server_id);
-      const thisServer = this.server;
-      this.chatChannel = thisServer.channels.get(app.config.discord.bot.text_channel);
-      this.voiceChannel = thisServer.channels.get(app.config.discord.bot.voice_channel);
+      const server = bot.guilds.get(app.config.discord.bot.server_id);
+      const chatChannel = server.channels.get(app.config.discord.bot.text_channel);
+      const voiceChannel = server.channels.get(app.config.discord.bot.voice_channel);
+      this.server = server;
+      this.chatChannel = chatChannel;
+      this.voiceChannel = voiceChannel;
 
       const currVoiceChannel = this.voiceChannel;
       for (const [id, member] of Array.from(currVoiceChannel.members)) {
@@ -119,7 +120,9 @@ export default class Bot extends EventEmitter {
         case '!play':
         case '!queue': {
           const res = radio.addSong(args[1], message.author);
-          if (res){
+          if (!res){
+            break;
+          }
             res.on('error', (err) => {
               message.reply(`I couldn't add that! The error was: \`${err.message}\``);
               console.error(err.stack);
@@ -135,10 +138,6 @@ export default class Bot extends EventEmitter {
               setTopic();
             });
             break;
-          }
-          else {
-            break;
-          }
         }
         default: {
           break; // do nothing

@@ -2,7 +2,7 @@
 
 import { URL, parse as parseUrl } from 'url';
 import qs from 'querystring';
-const fetch = require('node-fetch'); // FIXME needs babel for es6 module support
+import fetch from 'node-fetch';
 
 import { Writable } from 'stream';
 import { Handler, SongInfo } from '../handlers';
@@ -19,13 +19,10 @@ export default class SoundCloud implements Handler {
   link: string;
 
   constructor(link: string, config: $PropertyType<ConfigOptions, 'services'>) {
-    if (config && config.soundcloud && config.soundcloud.client_id){
-      this.key = (config && String(config.soundcloud) && String(config.soundcloud.client_id));
-    }
-    else {
-      this.key = '';
-    }
     this.link = link;
+    if (config && config.soundcloud && config.soundcloud.client_id) {
+      this.key = config.soundcloud.client_id;
+    }
   }
 
   getMeta(cb: (error: ?Error, song?: SongInfo) => void) {

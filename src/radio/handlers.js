@@ -13,11 +13,12 @@ const handlers: Array<Class<Handler>> = [
 ];
 
 export interface Handler {
-  /*constructor(link: string, config: $PropertyType<ConfigOptions, 'services'>): Handler;*/
-  /*static match(link: string): boolean;*/
-  getMeta(cb: (error: ?Error, song?: SongInfo)=> void): void;
+  //constructor(link: string, config: $PropertyType<ConfigOptions, 'services'>): Handler;
+  //static match(link: string): boolean;
+  getMeta(cb: (error: ?Error, song?: SongInfo) => void): void;
   download(stream: Writable): Writable;
 }
+
 export interface SongInfo {
   id: string,
   title: string,

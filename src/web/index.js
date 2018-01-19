@@ -64,7 +64,7 @@ export default class Web {
 
       app.use((req, res, next) => {
         if (force || req.secure) {
-          let header = 'max-age=' + String(maxAge);
+          let header = 'max-age=' + maxAge;
           if (includeSubDomains) header += '; includeSubDomains';
           if (preload) header += '; preload';
           res.setHeader('Strict-Transport-Security', header);

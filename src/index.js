@@ -39,7 +39,7 @@ export type ConfigOptions = {
       cert: string,
       hsts?: boolean | {
         force?: boolean,
-        maxAge?: number,
+        maxAge: number,
         includeSubDomains?: boolean,
         preload?: boolean,
       },

@@ -50,20 +50,21 @@ export function trimUser(user: Discord.User): UserInfo {
   return { name, username, discriminator, id, avatar };
 }
 
-//type QueueItem = [string, SongInfoExtended, number];
 export type QueueItem = {
   fp: string,
   song: SongInfoExtended,
   id: string,
 }
 
-/*interface AddSongEmitter extends EventEmitter {
+/*
+interface AddSongEmitter extends EventEmitter {
   on(event: 'error', listener: (err: Error) => void): this;
   on(event: 'meta', listener: (song: SongInfoExtended) => void): this;
   on(event: 'downloading', listener: () => void): this;
   on(event: 'processing', listener: () => void): this;
   on(event: 'done', listener: (song: SongInfoExtended) => void): this;
-}*/
+}
+*/
 
 class Radio extends EventEmitter {
   queues: Map<string, QueueItem[]>;
@@ -245,7 +246,7 @@ class Radio extends EventEmitter {
         if (!data) {
           emitter.emit('processing');
 
-          replaygain(fp).then( gain => {
+          replaygain(fp).then(gain => {
             song.gain = gain;
             finish(song);
           })
@@ -265,7 +266,7 @@ class Radio extends EventEmitter {
     return emitter;
   }
 
-  removeSong(user: Discord.User, qid: string) {
+  removeSong(user: Discord.User, qid: $PropertyType<QueueItem, 'id'>) {
     const queue = this.queues.get(user.id);
     if (!queue) return;
 
@@ -321,12 +322,14 @@ class Radio extends EventEmitter {
   }
 }
 
-/*interface Radio {
+/*
+interface Radio {
   on(event: 'history', listener: (history: Radio.history) => void): this;
   on(event: 'order', listener: (order: Radio.order) => void): this;
   on(event: 'skips', listener: (skips: Radio.skips, needed: number) => void): this;
   on(event: 'queue', listener: (user: Discord.User, queue: QueueItem[]) => void): this;
   on(event: 'song', listener: (fp?: string, song?: SongInfoExtended) => void): this;
-}*/
+}
+*/
 
 export default Radio;

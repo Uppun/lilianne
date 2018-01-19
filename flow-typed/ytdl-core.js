@@ -1,4 +1,4 @@
 /* @flow */
 declare module 'ytdl-core' {
-    declare module.exports: any;
-  }
+  declare module.exports: any;
+}

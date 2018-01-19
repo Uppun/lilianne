@@ -1,4 +1,4 @@
 /* @flow */
 declare module 'node-fetch' {
-    declare module.exports: any;
-  }
+  declare module.exports: any;
+}

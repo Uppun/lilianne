@@ -1,7 +1,3 @@
-[ignore]
-
-[include]
-
 [libs]
 compression
 connect-redis
@@ -17,8 +13,7 @@ redis
 socket.io
 uuid
 ytdl-core
-[lints]
 
 [options]
 module.ignore_non_literal_requires=true
-[strict]
+

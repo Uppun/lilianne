@@ -1,4 +1,4 @@
 /* @flow */
 declare module 'discord.js' {
-    declare module.exports: any;
-  }
+  declare module.exports: any;
+}
