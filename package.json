@@ -16,7 +16,8 @@
     "build-server": "babel src/ -d lib/",
     "build-client": "webpack --config web/config/webpack.config.prod.js",
     "format": "prettier \"{src,web/src}/**/*.js\"",
-    "lint": "eslint src/ web/src/"
+    "lint": "eslint src/ web/src/",
+    "flow": "flow check"
   },
   "dependencies": {
     "compression": "^1.6.2",

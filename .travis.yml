@@ -5,6 +5,8 @@ jobs:
     - stage: code quality
       script: "yarn check"
       node_js: node
+    - script: "yarn run flow"
+      node_js: node
     - script: "yarn run format --list-different"
       node_js: node
     - script: "yarn run lint"
