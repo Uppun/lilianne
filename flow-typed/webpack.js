@@ -1,4 +1,4 @@
 /* @flow */
-declare module 'node-fetch' {
+declare module 'webpack' {
   declare module.exports: any;
 }
