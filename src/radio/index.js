@@ -13,6 +13,7 @@ import Application from '..';
 import handlers from './handlers';
 import type {SongInfo} from './handlers';
 import replaygain from './replaygain';
+import TaskRunner from './utils/TaskRunner';
 
 const {EventEmitter} = events;
 
@@ -44,11 +45,20 @@ export function trimUser(user: Discord.User): UserInfo {
   const name = username; // TODO
   return {name, username, discriminator, id, avatar};
 }
-
+export const QueueItemStatus = {
+  INVALID: 0,
+  UNKNOWN: 1,
+  WAITING: 2,
+  DOWNLOADING: 3,
+  PROCESSING: 4,
+  DONE: 5,
+};
 export type QueueItem = {
-  fp: string,
-  song: SongInfoExtended,
+  fp?: string,
+  song?: SongInfoExtended,
   id: string,
+  status: $Values<typeof QueueItemStatus>,
+  error?: Error,
 };
 
 /*
@@ -68,6 +78,7 @@ class Radio extends EventEmitter {
   history: SongInfoExtended[];
   skips: Set<string>;
   app: Application;
+  TaskRunner: TaskRunner;
 
   constructor(app: Application) {
     super();
@@ -78,6 +89,7 @@ class Radio extends EventEmitter {
     this.current = null;
     this.history = [];
     this.skips = new Set();
+    this.TaskRunner = new TaskRunner();
 
     // eslint-disable-next-line handle-callback-err
     app.db.lrange('radio:history', 0, 19, (err: Error, res?: string[]) => {
@@ -144,32 +156,64 @@ class Radio extends EventEmitter {
     this.emit('skips', this.skips, needed);
   }
 
-  addSong(link: string, user: Discord.User) {
-    const handler = handlers(link, this.app.config);
-    if (!handler) return null;
+  linkChecker(link: string, user: Discord.User) {}
 
+  addSong(link: string, user: Discord.User) {
     const emitter = new EventEmitter();
 
-    handler.getMeta((err, song: SongInfoExtended) => {
-      if (err) return emitter.emit('error', err);
+    const queueItem: QueueItem = {id: uuid(), status: QueueItemStatus.UNKNOWN};
+    const uid = user.id;
 
+    if (!this.queues.has(uid)) this.queues.set(uid, []);
+    const q = this.queues.get(uid) || [];
+    q.push(queueItem);
+    this.emit('queue', user, q);
+
+    const emitUpdate = (nextTick: boolean = false) => {
+      if (nextTick) {
+        process.nextTick(() => {
+          this.emit('queue', user, q);
+          emitter.emit('update', queueItem);
+        });
+      } else {
+        this.emit('queue', user, q);
+        emitter.emit('update', queueItem);
+      }
+    };
+    const handler = handlers(link, this.app.config);
+    if (!handler) {
+      queueItem.status = QueueItemStatus.INVALID;
+      queueItem.error = new Error('Invalid URL');
+      emitUpdate(true);
+      return emitter;
+    }
+    handler.getMeta((err, song: SongInfoExtended) => {
+      if (err) {
+        queueItem.status = QueueItemStatus.INVALID;
+        queueItem.error = err;
+        return emitUpdate();
+      }
       // reject if too long
       if (song.duration > 2 * 60 * 60) {
-        return emitter.emit('error', new Error('Track is too long'));
+        queueItem.status = QueueItemStatus.INVALID;
+        queueItem.error = new Error('Track is too long');
+        return emitUpdate();
       }
 
       const service = handler.constructor.name.toLowerCase();
-      song.service = service;
-      emitter.emit('meta', song);
-
       const cache = path.join(this.app.config.radio.cache, service);
       const fp = path.join(cache, song.id.toString());
       const key = ['radio', service, song.id].join(':');
 
-      function getFile(fp: string, cb: (error: ?Error, success?: boolean) => void) {
-        function download() {
+      song.service = service;
+      queueItem.status = QueueItemStatus.WAITING;
+      queueItem.song = song;
+      queueItem.fp = fp;
+      emitUpdate();
+      const getFile = (fp: string, cb: (error: ?Error, success?: boolean) => void) => {
+        const download = () => {
           mkdirp(cache, err2 => {
-            if (err) {
+            if (err2) {
               cb(err2);
               return;
             }
@@ -182,27 +226,27 @@ class Radio extends EventEmitter {
               .on('finish', () => {
                 cb(null, true);
               });
-
-            emitter.emit('downloading');
+            queueItem.status = QueueItemStatus.DOWNLOADING;
+            emitUpdate();
           });
-        }
+        };
 
         fs.stat(fp, (err, stats) => {
           // not cached
           if (err) {
             if (err.code === 'ENOENT') {
-              download();
+              this.TaskRunner.queueTask(download);
             } else {
               cb(err);
             }
             // cached
           } else if (stats.size === 0) {
-            download();
+            this.TaskRunner.queueTask(download);
           } else {
             cb(null, true);
           }
         });
-      }
+      };
 
       function promisify(func: (cb: (err: ?Error, res?: any) => void) => any) {
         return new Promise((resolve, reject) => {
@@ -220,13 +264,8 @@ class Radio extends EventEmitter {
         .then((res: any[]) => {
           const self = this;
           function finish(song: SongInfoExtended) {
-            const uid = user.id;
-            if (!self.queues.has(uid)) self.queues.set(uid, []);
-            const q = self.queues.get(uid) || [];
-            q.push({fp, song, id: uuid()});
-
-            emitter.emit('done', song);
-            self.emit('queue', user, q);
+            queueItem.status = QueueItemStatus.DONE;
+            emitUpdate();
 
             self.app.db
               .multi()
@@ -241,7 +280,8 @@ class Radio extends EventEmitter {
           } catch (e) {}
 
           if (!data) {
-            emitter.emit('processing');
+            queueItem.status = QueueItemStatus.PROCESSING;
+            emitUpdate();
 
             replaygain(fp)
               .then(gain => {
