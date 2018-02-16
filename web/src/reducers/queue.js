@@ -1,6 +1,6 @@
 import {INITIALIZE, ADD_SONG, REMOVE_SONG, SET_LOCAL_QUEUE, SET_SONG_STATUS} from '../actions';
 
-export default function queue(state = {queue: [], errors: [], processing: null}, action) {
+export default function queue(state = {queue: []}, action) {
   switch (action.type) {
     case INITIALIZE:
       return {
@@ -10,7 +10,7 @@ export default function queue(state = {queue: [], errors: [], processing: null},
     case REMOVE_SONG: {
       const {id} = action.payload;
       return {
-        queue: state.queue.filter(item => item.id !== id),
+        queue: state.filter(item => item.id !== id),
       };
     }
 
@@ -26,7 +26,7 @@ export default function queue(state = {queue: [], errors: [], processing: null},
 
       return {
         ...state,
-        queue: state.queue.map(item => (item.id === queueItem.id ? queueItem : item)),
+        queue: state.map(item => (item.id === queueItem.id ? queueItem : item)),
       };
     }
 
@@ -36,5 +36,5 @@ export default function queue(state = {queue: [], errors: [], processing: null},
 }
 
 export function getSongQueues(state) {
-  return {queues: state.queue};
+  return {queue: state.queue};
 }

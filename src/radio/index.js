@@ -16,6 +16,15 @@ import replaygain from './replaygain';
 
 const {EventEmitter} = events;
 
+export const QueueItemStatus = {
+  INVALID: 0,
+  UNKNOWN: 1,
+  WAITING: 2,
+  DOWNLOADING: 3,
+  PROCESSING: 4,
+  DONE: 5,
+};
+
 export interface SongInfoExtended extends SongInfo {
   service: string;
   gain: number;
@@ -44,14 +53,7 @@ export function trimUser(user: Discord.User): UserInfo {
   const name = username; // TODO
   return {name, username, discriminator, id, avatar};
 }
-export const QueueItemStatus = {
-  INVALID: 0,
-  UNKNOWN: 1,
-  WAITING: 2,
-  DOWNLOADING: 3,
-  PROCESSING: 4,
-  DONE: 5,
-};
+
 export type QueueItem = {
   fp?: string,
   song?: SongInfoExtended,
@@ -59,16 +61,6 @@ export type QueueItem = {
   status: $Values<typeof QueueItemStatus>,
   error?: Error,
 };
-
-/*
-interface AddSongEmitter extends EventEmitter {
-  on(event: 'error', listener: (err: Error) => void): this;
-  on(event: 'meta', listener: (song: SongInfoExtended) => void): this;
-  on(event: 'downloading', listener: () => void): this;
-  on(event: 'processing', listener: () => void): this;
-  on(event: 'done', listener: (song: SongInfoExtended) => void): this;
-}
-*/
 
 class Radio extends EventEmitter {
   queues: Map<string, QueueItem[]>;
@@ -153,28 +145,29 @@ class Radio extends EventEmitter {
     this.emit('skips', this.skips, needed);
   }
 
-  linkChecker(link: string, user: Discord.User) {}
-
   addSong(link: string, user: Discord.User) {
     const emitter = new EventEmitter();
 
-    const queueItem: QueueItem = {id: uuid(), status: QueueItemStatus.UNKNOWN};
-    const uid = user.id;
+    const queueItem: QueueItem = {
+      id: uuid(),
+      status: QueueItemStatus.UNKNOWN,
+    };
 
-    if (!this.queues.has(uid)) this.queues.set(uid, []);
-    const q = this.queues.get(uid) || [];
+    if (!this.queues.has(user.id)) this.queues.set(user.id, []);
+    const q = this.queues.get(user.id) || [];
     q.push(queueItem);
     this.emit('queue', user, q);
 
     const emitUpdate = (nextTick: boolean = false) => {
-      if (nextTick) {
-        process.nextTick(() => {
-          this.emit('queue', user, q);
-          emitter.emit('update', queueItem);
-        });
-      } else {
+      const emit = () => {
         this.emit('queue', user, q);
         emitter.emit('update', queueItem);
+      };
+
+      if (nextTick) {
+        process.nextTick(emit);
+      } else {
+        emit();
       }
     };
 
@@ -227,6 +220,7 @@ class Radio extends EventEmitter {
               .on('finish', () => {
                 cb(null, true);
               });
+
             queueItem.status = QueueItemStatus.DOWNLOADING;
             emitUpdate();
           });

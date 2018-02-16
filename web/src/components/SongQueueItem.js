@@ -11,7 +11,7 @@ const QueueItemStatus = {
   DONE: 5,
 };
 
-function setStatus(status) {
+function getStatusText(status) {
   switch (status) {
     case QueueItemStatus.INVALID:
       return 'Error';
@@ -23,10 +23,8 @@ function setStatus(status) {
       return 'downloading...';
     case QueueItemStatus.PROCESSING:
       return 'processing...';
-    case QueueItemStatus.DONE:
-      return 'ready';
     default:
-      return "You're not supposed to be here";
+      return 'ready';
   }
 }
 
