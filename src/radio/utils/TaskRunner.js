@@ -5,7 +5,6 @@ export default class TaskRunner {
   queueTask(task) {
     this.taskQueue.push(task);
     if (!this.isRunning) {
-      console.log('Downloading...');
       this.doTask();
     }
   }
