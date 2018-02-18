@@ -23,6 +23,7 @@ function getStatusText(status) {
       return 'downloading...';
     case QueueItemStatus.PROCESSING:
       return 'processing...';
+    case QueueItemStatus.DONE:
     default:
       return 'ready';
   }

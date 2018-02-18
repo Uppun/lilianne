@@ -183,14 +183,16 @@ class Radio extends EventEmitter {
       if (err) {
         queueItem.status = QueueItemStatus.INVALID;
         queueItem.error = err;
-        return emitUpdate();
+        emitUpdate();
+        return;
       }
 
       // reject if too long
       if (song.duration > 2 * 60 * 60) {
         queueItem.status = QueueItemStatus.INVALID;
         queueItem.error = new Error('Track is too long');
-        return emitUpdate();
+        emitUpdate();
+        return;
       }
 
       const service = handler.constructor.name.toLowerCase();

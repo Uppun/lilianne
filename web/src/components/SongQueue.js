@@ -5,8 +5,7 @@ import {getSongQueues} from '../reducers/queue';
 import {addSong, removeSong} from '../actions';
 import SongQueueItem from './SongQueueItem';
 
-function SongQueue({queues, doQueueAdd, doQueueRemove}) {
-  const {queue} = queues;
+function SongQueue({queue, doQueueAdd, doQueueRemove}) {
   let input;
 
   function onSubmit(event) {

@@ -1,33 +1,22 @@
 import {INITIALIZE, REMOVE_SONG, SET_LOCAL_QUEUE, SET_SONG_STATUS} from '../actions';
 
-export default function queue(state = {queue: []}, action) {
+export default function queue(state = [], action) {
   switch (action.type) {
     case INITIALIZE:
-      return {
-        queue: action.payload.queue,
-      };
+      return action.payload.queue;
 
     case REMOVE_SONG: {
       const {id} = action.payload;
-      return {
-        queue: state.filter(item => item.id !== id),
-      };
+      return state.filter(item => item.id !== id);
     }
 
     case SET_LOCAL_QUEUE: {
-      return {
-        ...state,
-        queue: action.payload,
-      };
+      return action.payload;
     }
 
     case SET_SONG_STATUS: {
       const queueItem = action.payload;
-
-      return {
-        ...state,
-        queue: state.map(item => (item.id === queueItem.id ? queueItem : item)),
-      };
+      return state.map(item => (item.id === queueItem.id ? queueItem : item));
     }
 
     default:
