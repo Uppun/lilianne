@@ -13,7 +13,7 @@ import Application from '..';
 import handlers from './handlers';
 import type {SongInfo} from './handlers';
 import replaygain from './replaygain';
-import TaskRunner from './utils/TaskRunner.js';
+import TaskRunner from './utils/TaskRunner';
 
 const {EventEmitter} = events;
 
