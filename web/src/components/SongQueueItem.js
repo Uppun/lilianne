@@ -41,7 +41,7 @@ function ItemWaiting({index, data, onDelete}) {
       <div className="info">
         <a href={data.url}>{data.url}</a>
       </div>
-      <div className="status">{setStatus(data.status)}</div>
+      <div className="status">{getStatusText(data.status)}</div>
       <div className="actions">
         <button className="btn-delete" type="button" onClick={onDelete}>
           &times;
@@ -67,7 +67,7 @@ function ItemResolved({index, data, onDelete}) {
         </div>
         <div className={classNames('uploader', song.service)}>{song.uploader.name}</div>
       </div>
-      <div className="status">{setStatus(data.status)}</div>
+      <div className="status">{getStatusText(data.status)}</div>
       <div className="time">{timeStr(song.duration)}</div>
       <div className="actions">
         <button className="btn-delete" type="button" onClick={onDelete}>

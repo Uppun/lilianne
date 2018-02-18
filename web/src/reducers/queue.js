@@ -1,4 +1,4 @@
-import {INITIALIZE, ADD_SONG, REMOVE_SONG, SET_LOCAL_QUEUE, SET_SONG_STATUS} from '../actions';
+import {INITIALIZE, REMOVE_SONG, SET_LOCAL_QUEUE, SET_SONG_STATUS} from '../actions';
 
 export default function queue(state = {queue: []}, action) {
   switch (action.type) {
