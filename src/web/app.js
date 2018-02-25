@@ -82,15 +82,16 @@ export default function webapp(web: Web) {
 
     // ADD HOOKS
     socket.on('add', (url: string) => {
-      radio.addSong(url, user).then(result => {
-        if (result) {
+      radio
+        .addSong(url, user)
+        .then(result => {
           for (const event of result) {
             event.on('update', queueItem => {
               socket.emit('add status', queueItem);
             });
           }
-        }
-      });
+        })
+        .catch(reason => console.log(reason));
     });
 
     socket.on('delete', (qid: string) => {

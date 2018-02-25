@@ -150,15 +150,14 @@ class Radio extends EventEmitter {
     this.emit('skips', this.skips, needed);
   }
 
-  addSong(link: string, user: Discord.User) {
+  addSong(link: string, user: Discord.User): Promise<Array<*>> {
     const passedUrl = new URL(link);
     if (passedUrl.pathname === '/playlist' && passedUrl.searchParams.has('list')) {
-      return playlistParser(String(passedUrl.searchParams.get('list')), this.app.config.youtube.key)
-        .then(items => items.map(item => this._addSong(item, user)))
-        .catch(reason => {});
+      return playlistParser(String(passedUrl.searchParams.get('list')), this.app.config.youtube.key).then(items =>
+        items.map(item => this._addSong(item, user))
+      );
     }
-    const songPromise: Promise<Array<*>> = Promise.resolve([this._addSong(link, user)]);
-    return songPromise;
+    return Promise.resolve([this._addSong(link, user)]);
   }
 
   _addSong(link: string, user: Discord.User) {

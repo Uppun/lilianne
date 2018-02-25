@@ -107,15 +107,16 @@ export default class Bot extends EventEmitter {
         case '!add':
         case '!play':
         case '!queue': {
-          radio.addSong(args[1], message.author).then(result => {
-            if (result) {
-              for (const event of result) {
-                event.on('error', err => {
+          radio
+            .addSong(args[1], message.author)
+            .then(result => {
+              if (result.length === 1) {
+                result[0].on('error', err => {
                   message.reply(`I couldn't add that! The error was: \`${err.message}\``);
                   console.error(err.stack);
                 });
 
-                event.on('done', song => {
+                result[0].on('done', song => {
                   const duration = timeStr(song.duration);
 
                   message.reply(
@@ -124,9 +125,11 @@ export default class Bot extends EventEmitter {
 
                   setTopic();
                 });
+              } else {
+                message.reply(`Queueing a playlist of ${result.length} items.`);
               }
-            }
-          });
+            })
+            .catch(reason => message.reply(`Oops! Something went wrong! Error: ${reason}`));
           break;
         }
         default: {
