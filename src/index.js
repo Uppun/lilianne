@@ -63,11 +63,8 @@ export default class Application {
   constructor(configPath: string = process.argv[2] || 'config.json') {
     this.config = require(path.resolve(configPath));
     this.db = redis.createClient(this.config.redis);
-    //  $FlowFixMe
     this.radio = new Radio(this);
-    //  $FlowFixMe
     this.web = new Web(this);
-    //  $FlowFixMe
     this.bot = new Bot(this);
 
     const port = this.config.web.port || (this.config.web.tls ? 443 : 80);
