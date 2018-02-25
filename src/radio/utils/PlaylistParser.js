@@ -1,16 +1,19 @@
 /* @flow */
 
-const https = require('https');
-const querystring = require('querystring');
+import https from 'https';
+import querystring from 'querystring';
+import type {ConfigOptions} from '../..';
+
+const getUrl = 'https://www.googleapis.com/youtube/v3/playlistItems?';
+const youtubeUrl = 'https://www.youtube.com/watch?v=';
 
 export default function parsePlaylist(
   id: string,
-  token: string = '',
+  config: string,
+  token?: string,
   resultArray: Array<string> = []
 ): Promise<Array<string>> {
-  const key = 'AIzaSyCSPw6aZyX0sdH39Lm_Bzf2SRMdBcqNcp4';
-  let getUrl = 'https://www.googleapis.com/youtube/v3/playlistItems?';
-  const youtubeUrl = 'https://www.youtube.com/watch?v=';
+  const key = config;
   const options: Object = {
     playlistId: id,
     maxResults: 50,
@@ -20,13 +23,15 @@ export default function parsePlaylist(
   if (token) {
     options.pageToken = token;
   }
-  getUrl += querystring.stringify(options);
+  let currentUrl = getUrl + querystring.stringify(options);
   return new Promise(resolve => {
-    https.get(getUrl, res => {
+    https.get(currentUrl, res => {
       const buffer = [];
+
       res.on('data', chunk => {
         buffer.push(chunk);
       });
+
       res.on('end', () => {
         const data = Buffer.concat(buffer).toString();
         const parsedData = JSON.parse(data);
@@ -38,12 +43,14 @@ export default function parsePlaylist(
             resultArray.push(youtubeUrl + item.snippet.resourceId.videoId);
           }
         }
+
         if (parsedData.nextPageToken) {
-          resolve(parsePlaylist(id, parsedData.nextPageToken, resultArray));
+          resolve(parsePlaylist(id, config, parsedData.nextPageToken, resultArray));
         } else {
           resolve(resultArray);
         }
       });
+
       res.on('error', err => {
         console.error(err);
       });

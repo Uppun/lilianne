@@ -15,8 +15,7 @@ import type {SongInfo} from './handlers';
 import replaygain from './replaygain';
 import TaskRunner from './utils/TaskRunner';
 import playlistParser from './utils/PlaylistParser';
-
-const {URL} = require('url');
+import {URL} from 'url';
 
 const {EventEmitter} = events;
 
@@ -151,17 +150,18 @@ class Radio extends EventEmitter {
     this.emit('skips', this.skips, needed);
   }
 
-  async addSongWrapper(link: string, user: Discord.User) {
-    const passedUrl = new URL(link);
-    if (passedUrl.pathname === '/playlist') {
-      return playlistParser(String(passedUrl.searchParams.get('list'))).then(items =>
-        items.map(item => this.addSong(item, user))
-      );
-    } else {
-      return [this.addSong(link, user)];
-    }
-  }
   addSong(link: string, user: Discord.User) {
+    const passedUrl = new URL(link);
+    if (passedUrl.pathname === '/playlist' && passedUrl.searchParams.has('list')) {
+      return playlistParser(String(passedUrl.searchParams.get('list')), this.app.config.youtube.key)
+        .then(items => items.map(item => this._addSong(item, user)))
+        .catch(reason => {});
+    }
+    const songPromise: Promise<Array<*>> = Promise.resolve([this._addSong(link, user)]);
+    return songPromise;
+  }
+
+  _addSong(link: string, user: Discord.User) {
     const emitter = new EventEmitter();
 
     const queueItem: QueueItem = {

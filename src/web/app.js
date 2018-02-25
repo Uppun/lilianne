@@ -82,12 +82,14 @@ export default function webapp(web: Web) {
 
     // ADD HOOKS
     socket.on('add', (url: string) => {
-      radio.addSongWrapper(url, user).then(result => {
-        result.forEach(event => {
-          event.on('update', queueItem => {
-            socket.emit('add status', queueItem);
-          });
-        });
+      radio.addSong(url, user).then(result => {
+        if (result) {
+          for (const event of result) {
+            event.on('update', queueItem => {
+              socket.emit('add status', queueItem);
+            });
+          }
+        }
       });
     });
 

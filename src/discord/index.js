@@ -107,22 +107,25 @@ export default class Bot extends EventEmitter {
         case '!add':
         case '!play':
         case '!queue': {
-          const res = radio.addSong(args[1], message.author);
-          if (!res) {
-            break;
-          }
-          res.on('error', err => {
-            message.reply(`I couldn't add that! The error was: \`${err.message}\``);
-            console.error(err.stack);
-          });
-          res.on('done', song => {
-            const duration = timeStr(song.duration);
+          radio.addSong(args[1], message.author).then(result => {
+            if (result) {
+              for (const event of result) {
+                event.on('error', err => {
+                  message.reply(`I couldn't add that! The error was: \`${err.message}\``);
+                  console.error(err.stack);
+                });
 
-            message.reply(
-              `queueing ${song.title} [${duration}] uploaded by ${song.uploader.name}` + '' // ` (${rating_str}★ / ${views_str} views)`
-            );
+                event.on('done', song => {
+                  const duration = timeStr(song.duration);
 
-            setTopic();
+                  message.reply(
+                    `queueing ${song.title} [${duration}] uploaded by ${song.uploader.name}` + '' // ` (${rating_str}★ / ${views_str} views)`
+                  );
+
+                  setTopic();
+                });
+              }
+            }
           });
           break;
         }
