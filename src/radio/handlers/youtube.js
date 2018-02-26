@@ -20,27 +20,21 @@ export default class YouTube implements Handler {
   }
 
   getMeta(): Promise<SongInfo> {
-    return new Promise((resolve, reject) => {
-      ytdl.getInfo(this.link, (err, info) => {
-        // check ytdl error
-        if (err) return reject(err);
+    return ytdl.getInfo(this.link).then(info => {
+      this.info = info;
 
-        //
-        this.info = info;
-
-        resolve({
-          id: info.video_id,
-          title: info.title,
-          url: info.video_url,
-          image: info.thumbnail_url,
-          duration: +info.length_seconds,
-          plays: info.view_count,
-          uploader: {
-            name: info.author.name,
-            url: info.author.channel_url,
-          },
-        });
-      });
+      return {
+        id: info.video_id,
+        title: info.title,
+        url: info.video_url,
+        image: info.thumbnail_url,
+        duration: +info.length_seconds,
+        plays: info.view_count,
+        uploader: {
+          name: info.author.name,
+          url: info.author.channel_url,
+        },
+      };
     });
   }
 
