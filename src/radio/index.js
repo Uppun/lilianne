@@ -269,15 +269,11 @@ class Radio extends EventEmitter {
               let cachedSong;
               try {
                 cachedSong = JSON.parse(res[1]);
+                return cachedSong.gain;
               } catch (e) {}
-
-              if (cachedSong) {
-                return Promise.resolve(cachedSong.gain);
-              }
 
               queueItem.status = QueueItemStatus.PROCESSING;
               emitUpdate();
-
               return replaygain(fp);
             })
             .then(gain => {
