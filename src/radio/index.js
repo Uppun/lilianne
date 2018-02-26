@@ -1,5 +1,4 @@
 /* @flow */
-/* eslint-disable no-param-reassign, no-shadow */
 
 import fs from 'fs';
 import path from 'path';
@@ -13,11 +12,12 @@ import Discord from 'discord.js';
 
 import Application from '..';
 import {getHandler} from './handlers';
-import type {SongInfo} from './handlers';
 import replaygain from './replaygain';
 import TaskRunner from './utils/TaskRunner';
-import playlistParser from './utils/PlaylistParser';
+import {parsePlaylist} from './utils/YoutubeUtils';
 import {getWithDefault} from './utils/MapUtils';
+
+import type {SongInfo} from './handlers';
 
 const {EventEmitter} = events;
 const stat = promisify(fs.stat);
@@ -158,7 +158,7 @@ class Radio extends EventEmitter {
     if (url.pathname === '/playlist' && url.searchParams.has('list')) {
       // $FlowFixMe
       const playlistId: string = url.searchParams.get('list');
-      return playlistParser(playlistId, this.app.config.youtube.key).then(items =>
+      return parsePlaylist(playlistId, this.app.config.youtube.key).then(items =>
         items.map(item => this._addSong(item, user))
       );
     }

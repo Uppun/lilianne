@@ -6,21 +6,22 @@ import querystring from 'querystring';
 const GET_URL = 'https://www.googleapis.com/youtube/v3/playlistItems?';
 const YOUTUBE_URL = 'https://www.youtube.com/watch?v=';
 
-export default function parsePlaylist(
-  id: string,
+export function parsePlaylist(
+  playlistId: string,
   key: string,
   pageToken?: string,
-  resultArray: Array<string> = []
-): Promise<Array<string>> {
+  resultArray: string[] = []
+): Promise<string[]> {
   const options: Object = {
-    playlistId: id,
+    playlistId,
+    key,
     maxResults: 50,
     part: 'snippet',
-    key: key,
   };
   if (pageToken) {
     options.pageToken = pageToken;
   }
+
   return new Promise((resolve, reject) => {
     https.get(GET_URL + querystring.stringify(options), res => {
       const buffer = [];
@@ -47,7 +48,7 @@ export default function parsePlaylist(
         }
 
         if (parsedData.nextPageToken) {
-          resolve(parsePlaylist(id, key, parsedData.nextPageToken, resultArray));
+          resolve(parsePlaylist(playlistId, key, parsedData.nextPageToken, resultArray));
         } else {
           resolve(resultArray);
         }
