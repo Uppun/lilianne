@@ -17,7 +17,10 @@ export default class TaskRunner {
     const task = this.taskQueue.shift();
     this.isRunning = !!task;
     if (task) {
-      task(this.doTask);
+      const result = task(this.doTask);
+      if (result.then) {
+        result.then(this.doTask, this.doTask);
+      }
     }
   };
 }

@@ -199,99 +199,109 @@ class Radio extends EventEmitter {
       return emitter;
     }
 
-    this.taskRunner.queueTask(done => {
-      handler.getMeta()
-        .then((song: SongInfoExtended) => {
-        // reject if too long
-        if (song.duration > 2 * 60 * 60) { // TODO(meishu): const this value somewhere
-          throw new Error('Track is too long');
-        }
+    this.taskRunner.queueTask(() =>
+      handler
+        .getMeta()
+        .then((s: SongInfo) => {
+          const song: SongInfoExtended = (s: any);
 
-        const service = handler.constructor.name.toLowerCase();
-        const cache = path.join(this.app.config.radio.cache, service);
-        const fp = path.join(cache, song.id.toString());
-        const key = ['radio', service, song.id].join(':');
+          // reject if too long
+          if (song.duration > 2 * 60 * 60) {
+            // TODO(meishu): const this value somewhere
+            throw new Error('Track is too long');
+          }
 
-        song.service = service;
-        queueItem.status = QueueItemStatus.WAITING;
-        queueItem.song = song;
-        queueItem.fp = fp;
-        emitUpdate();
+          const service = handler.constructor.name.toLowerCase();
+          const cache = path.join(this.app.config.radio.cache, service);
+          const fp = path.join(cache, song.id.toString());
+          const key = ['radio', service, song.id].join(':');
 
-        const getFile = (filepath: string): Promise =>
-          // Check the cached file.
-          stat(filepath)
-            // If it exists but is empty, pretend it doesn't exist.
-            .then(stats => {
-              if (stats.size === 0) {
-                const err = new Error();
-                err.code = 'ENOENT';
-                throw err;
+          song.service = service;
+          queueItem.status = QueueItemStatus.WAITING;
+          queueItem.song = song;
+          queueItem.fp = fp;
+          emitUpdate();
+
+          const download = (filepath: string): Promise<*> =>
+            // Check the cached file.
+            stat(filepath)
+              // If it exists but is empty, pretend it doesn't exist.
+              .then(stats => {
+                if (stats.size === 0) {
+                  const err = new Error();
+                  // $FlowFixMe
+                  err.code = 'ENOENT';
+                  throw err;
+                }
+              })
+              // We expect ENOENT if it doesn't exist. Re-throw any other error.
+              .catch(err => {
+                if (err.code !== 'ENOENT') {
+                  throw err;
+                }
+
+                return (
+                  // Create cache directory if needed.
+                  promisify(mkdirp)(cache)
+                    // Download the song.
+                    .then(
+                      () =>
+                        new Promise((resolve, reject) => {
+                          queueItem.status = QueueItemStatus.DOWNLOADING;
+                          emitUpdate();
+
+                          handler
+                            .download(fs.createWriteStream(filepath))
+                            .on('error', err => {
+                              reject(err);
+                            })
+                            .on('finish', () => {
+                              resolve();
+                            });
+                        })
+                    )
+                );
+              });
+
+          return Promise.all([download(fp), this.app.db.get(key)])
+            .then((res: *) => {
+              let cachedSong;
+              try {
+                cachedSong = JSON.parse(res[1]);
+              } catch (e) {}
+
+              if (cachedSong) {
+                return Promise.resolve(cachedSong.gain);
               }
-            })
-            // We expect ENOENT if it doesn't exist. Re-throw any other error.
-            .catch(err => {
-              if (err.code !== 'ENOENT') {
-                throw err;
-              }
-            })
-            // Create cache directory if needed.
-            .then(() => promisify(mkdirp)(cache))
-            // Download the song.
-            .then(() => new Promise((resolve, reject) => {
-              queueItem.status = QueueItemStatus.DOWNLOADING;
+
+              queueItem.status = QueueItemStatus.PROCESSING;
               emitUpdate();
 
-              handler
-                .download(fs.createWriteStream(filepath))
-                .on('error', err => {
-                  reject(err);
-                })
-                .on('finish', () => {
-                  resolve();
-                });
-            }));
+              return replaygain(fp);
+            })
+            .then(gain => {
+              song.gain = gain;
+              queueItem.status = QueueItemStatus.DONE;
+              emitUpdate();
 
-        return Promise.all([getFile(fp), this.app.db.get(key)])
-          .then((res: *) => {
-            let cachedSong;
-            try {
-              cachedSong = JSON.parse(res[1]);
-            } catch (e) {}
-
-            if (cachedSong) {
-              return Promise.resolve(cachedSong.gain);
-            }
-
-            queueItem.status = QueueItemStatus.PROCESSING;
-            emitUpdate();
-
-            return replaygain(fp);
-          })
-          .then(gain => {
-            song.gain = gain;
-            queueItem.status = QueueItemStatus.DONE;
-            emitUpdate();
-
-            // We can update this asynchronously.
-            this.app.db
-              .multi()
-              .set(key, JSON.stringify(song))
-              .sadd(['radio', service].join(':'), song.id)
-              .exec();
-          })
-          .catch(err => {
-            emitter.emit('error', err);
-          });
-      })
-      .catch((err: Error) => {
-        queueItem.status = QueueItemStatus.INVALID;
-        queueItem.error = err;
-      })
-      .then(() => {
-        emitUpdate();
-      });
-    });
+              // We can update this asynchronously.
+              this.app.db
+                .multi()
+                .set(key, JSON.stringify(song))
+                .sadd(['radio', service].join(':'), song.id)
+                .exec();
+            })
+            .catch(err => {
+              emitter.emit('error', err);
+              throw err;
+            });
+        })
+        .catch((err: Error) => {
+          queueItem.status = QueueItemStatus.INVALID;
+          queueItem.error = err;
+          emitUpdate();
+        })
+    );
 
     return emitter;
   }
