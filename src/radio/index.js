@@ -89,12 +89,12 @@ class Radio extends EventEmitter {
     this.taskRunner = new TaskRunner();
 
     // eslint-disable-next-line handle-callback-err
-    app.db.lrange('radio:history', 0, 19, (err: Error, res?: string[]) => {
-      if (res) {
+    app.db.lrange('radio:history', 0, 19)
+      .then((res: string[]) => {
         this.history = res.map(s => JSON.parse(s));
         this.emit('history', this.history);
-      }
-    });
+      },
+      () => {});
   }
 
   addDj(user: Discord.User) {
@@ -336,7 +336,8 @@ class Radio extends EventEmitter {
       const index = this.order.findIndex(u => this.queues.has(u.id) && this.queues.get(u.id).length > 0);
       if (index !== -1) {
         const user = this.order[index];
-        const queue = this.queues.get(user.id) || [];
+        const queue = this.queues.get(user.id);
+        // $FlowFixMe
         const data = queue.shift();
 
         this.order.push(...this.order.splice(0, index + 1));
