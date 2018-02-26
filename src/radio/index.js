@@ -89,12 +89,13 @@ class Radio extends EventEmitter {
     this.taskRunner = new TaskRunner();
 
     // eslint-disable-next-line handle-callback-err
-    app.db.lrange('radio:history', 0, 19)
-      .then((res: string[]) => {
+    app.db.lrange('radio:history', 0, 19).then(
+      (res: string[]) => {
         this.history = res.map(s => JSON.parse(s));
         this.emit('history', this.history);
       },
-      () => {});
+      () => {}
+    );
   }
 
   addDj(user: Discord.User) {
