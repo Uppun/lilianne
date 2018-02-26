@@ -5,8 +5,8 @@ import {URL, parse as parseUrl} from 'url';
 import qs from 'querystring';
 import fetch from 'node-fetch';
 
-import {Writable} from 'stream';
-import {Handler, SongInfo} from '../handlers';
+import type {Writable} from 'stream';
+import type {Handler, SongInfo} from '../handlers';
 import type {ConfigOptions} from '../..';
 
 export default class SoundCloud implements Handler {
@@ -26,10 +26,9 @@ export default class SoundCloud implements Handler {
     }
   }
 
-  getMeta(cb: (error: ?Error, song?: SongInfo) => void) {
+  getMeta(): Promise<SongInfo> {
     if (!this.key) {
-      process.nextTick(cb, new Error('no SoundCloud API key provided'));
-      return;
+      return Promise.reject(new Error('no SoundCloud API key provided'));
     }
 
     const url = new URL('https://api.soundcloud.com/resolve');
@@ -38,24 +37,23 @@ export default class SoundCloud implements Handler {
       client_id: this.key,
     });
 
-    fetch(url.href, {redirect: 'follow'})
-      .then((res: any) =>
+    return fetch(url.href, {redirect: 'follow'})
+      .then((res: *) =>
         res.json().then((data: any) => {
           // check api error
           if (!res.ok) {
             const errs = (data && data.errors && data.errors.map((err: any) => err.error_message)) || [];
-            cb(new Error(`SoundCloud API error (HTTP ${res.status}) - ${errs.join(', ')}`));
-            return;
+            throw new Error(`SoundCloud API error (HTTP ${res.status}) - ${errs.join(', ')}`);
           }
 
           // check if streamable track
-          if (data.kind !== 'track') return cb(new Error('URL is not a track'));
-          if (!data.streamable) return cb(new Error('Track is not streamable'));
-          if (!data.stream_url) return cb(new Error('No stream URL found'));
+          if (data.kind !== 'track') throw new Error('URL is not a track');
+          if (!data.streamable) throw new Error('Track is not streamable');
+          if (!data.stream_url) throw new Error('No stream URL found');
 
           this.stream_url = data.stream_url;
 
-          cb(null, {
+          return {
             id: data.id,
             title: data.title,
             url: data.permalink_url,
@@ -66,12 +64,12 @@ export default class SoundCloud implements Handler {
               name: data.user.username,
               url: data.user.permalink_url,
             },
-          });
+          };
         })
       )
       .catch((err: Error) => {
         console.error(err);
-        cb(new Error(`SoundCloud API error - ${err.message}`));
+        throw new Error(`SoundCloud API error - ${err.message}`);
       });
   }
 

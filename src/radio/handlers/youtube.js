@@ -3,8 +3,8 @@
 import {parse as parseUrl} from 'url';
 import ytdl from 'ytdl-core';
 
-import {Writable} from 'stream';
-import {Handler, SongInfo} from '../handlers';
+import type {Writable} from 'stream';
+import type {Handler, SongInfo} from '../handlers';
 
 export default class YouTube implements Handler {
   static match(link: string) {
@@ -15,20 +15,20 @@ export default class YouTube implements Handler {
   info: ytdl.videoInfo;
   link: string;
 
-  constructor(link: string) {
+  constructor(link: string, _config: *) {
     this.link = link;
   }
 
-  getMeta(cb: (error: ?Error, song?: SongInfo) => void) {
-    try {
+  getMeta(): Promise<SongInfo> {
+    return new Promise((resolve, reject) => {
       ytdl.getInfo(this.link, (err, info) => {
         // check ytdl error
-        if (err) return cb(err);
+        if (err) return reject(err);
 
         //
         this.info = info;
 
-        cb(null, {
+        resolve({
           id: info.video_id,
           title: info.title,
           url: info.video_url,
@@ -41,9 +41,7 @@ export default class YouTube implements Handler {
           },
         });
       });
-    } catch (e) {
-      cb(e);
-    }
+    });
   }
 
   download(stream: Writable) {

@@ -10,7 +10,7 @@ import mkdirp from 'mkdirp';
 import Discord from 'discord.js';
 
 import Application from '..';
-import handlers from './handlers';
+import {getHandler} from './handlers';
 import type {SongInfo} from './handlers';
 import replaygain from './replaygain';
 import TaskRunner from './utils/TaskRunner';
@@ -186,7 +186,7 @@ class Radio extends EventEmitter {
       }
     };
 
-    const handler = handlers(link, this.app.config);
+    const handler = getHandler(link, this.app.config);
     if (!handler) {
       queueItem.status = QueueItemStatus.INVALID;
       queueItem.error = new Error('Invalid URL');
