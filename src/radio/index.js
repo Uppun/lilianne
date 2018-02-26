@@ -31,23 +31,23 @@ export const QueueItemStatus = {
   DONE: 5,
 };
 
-export interface SongInfoExtended extends SongInfo {
-  service: string;
-  gain: number;
+export type SongInfoExtended = SongInfo & {
+  service: string,
+  gain: number,
   player: {
     dj: UserInfo,
     startTime: number, // in ms
     currentTime?: number, // in ms
-  };
-}
+  },
+};
 
-export interface UserInfo {
-  name: string;
-  username: string;
-  discriminator: string;
-  id: string;
-  avatar: string;
-}
+export type UserInfo = {
+  name: string,
+  username: string,
+  discriminator: string,
+  id: string,
+  avatar: string,
+};
 
 function skipRatio(length: number) {
   const minutes = length / 60;
@@ -202,8 +202,9 @@ class Radio extends EventEmitter {
     this.taskRunner.queueTask(() =>
       handler
         .getMeta()
-        .then((s: SongInfo) => {
-          const song: SongInfoExtended = (s: any);
+        .then((songInfo: SongInfo) => {
+          // $FlowFixMe
+          const song: SongInfoExtended = {...songInfo};
 
           // reject if too long
           if (song.duration > 2 * 60 * 60) {
