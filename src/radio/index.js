@@ -89,9 +89,11 @@ class Radio extends EventEmitter {
     this.taskRunner = new TaskRunner();
 
     // eslint-disable-next-line handle-callback-err
-    app.db.lrange('radio:history', 0, 19, (_err, res: string[]) => {
-      this.history = res.map(s => JSON.parse(s));
-      this.emit('history', this.history);
+    app.db.lrange('radio:history', 0, 19, (_err: Error, res: string[]) => {
+      if (res) {
+        this.history = res.map(s => JSON.parse(s));
+        this.emit('history', this.history);
+      }
     });
   }
 
@@ -344,16 +346,18 @@ class Radio extends EventEmitter {
 
     if (this.order.length > 0) {
       // FIXME(meishu): we need to only get completed items. this is gross atm
-      // $FlowFixMe
       const index = this.order.findIndex(
         u =>
+          // $FlowFixMe
           this.queues.has(u.id) && this.queues.get(u.id).filter(item => item.status === QueueItemStatus.DONE).length > 0
       );
       if (index !== -1) {
         const user = this.order[index];
-        const queue = this.queues.get(user.id).filter(item => item.status === QueueItemStatus.DONE);
+        const queue = this.queues.get(user.id);
         // $FlowFixMe
-        const data = queue.shift();
+        const itemIndex = queue.findIndex(item => item.status === QueueItemStatus.DONE);
+        // $FlowFixMe
+        const data = queue.splice(itemIndex, 1)[0];
 
         this.order.push(...this.order.splice(0, index + 1));
 
