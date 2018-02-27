@@ -194,7 +194,7 @@ class Radio extends EventEmitter {
     const handler = getHandler(link, this.app.config);
     if (!handler) {
       queueItem.status = QueueItemStatus.INVALID;
-      queueItem.error = new Error('Invalid URL');
+      queueItem.error = 'Invalid URL';
       emitUpdate(true);
       return emitter;
     }
