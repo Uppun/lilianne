@@ -18,7 +18,7 @@ export default class TaskRunner {
     this.isRunning = !!task;
     if (task) {
       const result = task(this.doTask);
-      if (result.then) {
+      if (result && typeof result.then === 'function') {
         result.then(this.doTask, this.doTask);
       }
     }
