@@ -89,13 +89,10 @@ class Radio extends EventEmitter {
     this.taskRunner = new TaskRunner();
 
     // eslint-disable-next-line handle-callback-err
-    app.db.lrange('radio:history', 0, 19).then(
-      (res: string[]) => {
-        this.history = res.map(s => JSON.parse(s));
-        this.emit('history', this.history);
-      },
-      () => {}
-    );
+    app.db.lrange('radio:history', 0, 19, (_err, res: string[]) => {
+      this.history = res.map(s => JSON.parse(s));
+      this.emit('history', this.history);
+    });
   }
 
   addDj(user: Discord.User) {
@@ -265,8 +262,19 @@ class Radio extends EventEmitter {
                 );
               });
 
+          // FIXME(meishu): this is gross
+          const getCachedSongInfo = new Promise((resolve, reject) => {
+            this.app.db.get(key, (err, res) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(res);
+              }
+            });
+          });
+
           return (
-            Promise.all([download(fp), this.app.db.get(key)])
+            Promise.all([download(fp), getCachedSongInfo])
               // Get ReplayGain amount.
               .then((res: *) => {
                 let cachedSong;
@@ -277,6 +285,7 @@ class Radio extends EventEmitter {
 
                 queueItem.status = QueueItemStatus.PROCESSING;
                 emitUpdate();
+
                 return replaygain(fp);
               })
               // Save info, emit, and persist.
@@ -285,18 +294,20 @@ class Radio extends EventEmitter {
                 queueItem.status = QueueItemStatus.DONE;
                 emitUpdate();
 
-                return this.app.db
+                // TODO(meishu): should wait for this before resolving
+                this.app.db
                   .multi()
                   .set(key, JSON.stringify(song))
                   .sadd(['radio', service].join(':'), song.id)
-                  .exec()
-                  .catch(() => {});
+                  .exec();
               })
           );
         })
         .catch((err: Error) => {
+          console.warn(err);
+
           queueItem.status = QueueItemStatus.INVALID;
-          queueItem.error = err;
+          queueItem.error = err.message;
           emitUpdate();
 
           emitter.emit('error', err);
@@ -328,15 +339,19 @@ class Radio extends EventEmitter {
       this.history.unshift(this.current);
       while (this.history.length > 20) this.history.pop();
 
-      this.app.db.lpush('radio:history', JSON.stringify(this.current)); // TODO
+      this.app.db.lpush('radio:history', JSON.stringify(this.current));
     }
 
     if (this.order.length > 0) {
+      // FIXME(meishu): we need to only get completed items. this is gross atm
       // $FlowFixMe
-      const index = this.order.findIndex(u => this.queues.has(u.id) && this.queues.get(u.id).length > 0);
+      const index = this.order.findIndex(
+        u =>
+          this.queues.has(u.id) && this.queues.get(u.id).filter(item => item.status === QueueItemStatus.DONE).length > 0
+      );
       if (index !== -1) {
         const user = this.order[index];
-        const queue = this.queues.get(user.id);
+        const queue = this.queues.get(user.id).filter(item => item.status === QueueItemStatus.DONE);
         // $FlowFixMe
         const data = queue.shift();
 
