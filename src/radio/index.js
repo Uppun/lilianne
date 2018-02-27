@@ -344,41 +344,46 @@ class Radio extends EventEmitter {
       this.app.db.lpush('radio:history', JSON.stringify(this.current));
     }
 
-    if (this.order.length > 0) {
-      // FIXME(meishu): we need to only get completed items. this is gross atm
-      const index = this.order.findIndex(
-        u =>
-          // $FlowFixMe
-          this.queues.has(u.id) && this.queues.get(u.id).filter(item => item.status === QueueItemStatus.DONE).length > 0
-      );
-      if (index !== -1) {
-        const user = this.order[index];
-        const queue = this.queues.get(user.id);
-        // $FlowFixMe
-        const itemIndex = queue.findIndex(item => item.status === QueueItemStatus.DONE);
-        // $FlowFixMe
-        const data = queue.splice(itemIndex, 1)[0];
+    let orderIndex = -1;
+    let songIndex;
+    let user;
+    let queue;
 
-        this.order.push(...this.order.splice(0, index + 1));
-
-        this.current = data.song;
-        // $FlowFixMe
-        this.current.player = {
-          dj: trimUser(user),
-          startTime: Date.now(),
-        };
-
-        this.emit('song', data.fp, this.current);
-        this.emit('order', this.order);
-        this.emit('queue', user, queue);
-        return;
+    for (let i = 0; i < this.order.length; i++) {
+      user = this.order[i];
+      queue = this.queues.get(user.id);
+      if (queue) {
+        songIndex = queue.findIndex(item => item.status === QueueItemStatus.DONE);
+        if (songIndex !== -1) {
+          orderIndex = i;
+          break;
+        }
       }
     }
 
-    if (this.current) {
-      this.current = null;
-      this.emit('song', null);
+    if (orderIndex === -1) {
+      if (this.current) {
+        this.current = null;
+        this.emit('song', null);
+      }
+      return;
     }
+
+    this.order.push(...this.order.splice(0, orderIndex + 1));
+
+    // $FlowFixMe
+    const data = queue.splice(songIndex, 1)[0];
+
+    this.current = data.song;
+    // $FlowFixMe
+    this.current.player = {
+      dj: trimUser(user),
+      startTime: Date.now(),
+    };
+
+    this.emit('song', data.fp, this.current);
+    this.emit('order', this.order);
+    this.emit('queue', user, queue);
   }
 }
 
