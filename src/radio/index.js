@@ -65,7 +65,7 @@ export type QueueItem = {
   song?: SongInfoExtended,
   id: string,
   status: $Values<typeof QueueItemStatus>,
-  error?: Error,
+  error?: string,
 };
 
 class Radio extends EventEmitter {
