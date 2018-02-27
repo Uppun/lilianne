@@ -265,39 +265,42 @@ class Radio extends EventEmitter {
                 );
               });
 
-          return Promise.all([download(fp), this.app.db.get(key)])
-            .then((res: *) => {
-              let cachedSong;
-              try {
-                cachedSong = JSON.parse(res[1]);
-                return cachedSong.gain;
-              } catch (e) {}
+          return (
+            Promise.all([download(fp), this.app.db.get(key)])
+              // Get ReplayGain amount.
+              .then((res: *) => {
+                let cachedSong;
+                try {
+                  cachedSong = JSON.parse(res[1]);
+                  return cachedSong.gain;
+                } catch (e) {}
 
-              queueItem.status = QueueItemStatus.PROCESSING;
-              emitUpdate();
-              return replaygain(fp);
-            })
-            .then(gain => {
-              song.gain = gain;
-              queueItem.status = QueueItemStatus.DONE;
-              emitUpdate();
+                queueItem.status = QueueItemStatus.PROCESSING;
+                emitUpdate();
+                return replaygain(fp);
+              })
+              // Save info, emit, and persist.
+              .then(gain => {
+                song.gain = gain;
+                queueItem.status = QueueItemStatus.DONE;
+                emitUpdate();
 
-              // We can update this asynchronously.
-              this.app.db
-                .multi()
-                .set(key, JSON.stringify(song))
-                .sadd(['radio', service].join(':'), song.id)
-                .exec();
-            })
-            .catch(err => {
-              emitter.emit('error', err);
-              throw err;
-            });
+                return this.app.db
+                  .multi()
+                  .set(key, JSON.stringify(song))
+                  .sadd(['radio', service].join(':'), song.id)
+                  .exec()
+                  .catch(() => {});
+              })
+          );
         })
         .catch((err: Error) => {
           queueItem.status = QueueItemStatus.INVALID;
           queueItem.error = err;
           emitUpdate();
+
+          emitter.emit('error', err);
+          throw err;
         })
     );
 
