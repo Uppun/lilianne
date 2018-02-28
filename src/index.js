@@ -48,6 +48,9 @@ export type ConfigOptions = {
           },
     },
   },
+  youtube: {
+    key: string,
+  },
 };
 
 export default class Application {

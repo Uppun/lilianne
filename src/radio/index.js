@@ -14,6 +14,8 @@ import handlers from './handlers';
 import type {SongInfo} from './handlers';
 import replaygain from './replaygain';
 import TaskRunner from './utils/TaskRunner';
+import playlistParser from './utils/PlaylistParser';
+import {URL} from 'url';
 
 const {EventEmitter} = events;
 
@@ -148,7 +150,17 @@ class Radio extends EventEmitter {
     this.emit('skips', this.skips, needed);
   }
 
-  addSong(link: string, user: Discord.User) {
+  addSong(link: string, user: Discord.User): Promise<Array<*>> {
+    const passedUrl = new URL(link);
+    if (passedUrl.pathname === '/playlist' && passedUrl.searchParams.has('list')) {
+      return playlistParser(String(passedUrl.searchParams.get('list')), this.app.config.youtube.key).then(items =>
+        items.map(item => this._addSong(item, user))
+      );
+    }
+    return Promise.resolve([this._addSong(link, user)]);
+  }
+
+  _addSong(link: string, user: Discord.User) {
     const emitter = new EventEmitter();
 
     const queueItem: QueueItem = {
@@ -182,125 +194,129 @@ class Radio extends EventEmitter {
       return emitter;
     }
 
-    handler.getMeta((err, song: SongInfoExtended) => {
-      if (err) {
-        queueItem.status = QueueItemStatus.INVALID;
-        queueItem.error = err;
+    const getMetaWrapper = done => {
+      handler.getMeta((err, song: SongInfoExtended) => {
+        if (err) {
+          queueItem.status = QueueItemStatus.INVALID;
+          queueItem.error = err;
+          emitUpdate();
+          return;
+        }
+
+        // reject if too long
+        if (song.duration > 2 * 60 * 60) {
+          queueItem.status = QueueItemStatus.INVALID;
+          queueItem.error = new Error('Track is too long');
+          emitUpdate();
+          return;
+        }
+
+        const service = handler.constructor.name.toLowerCase();
+        const cache = path.join(this.app.config.radio.cache, service);
+        const fp = path.join(cache, song.id.toString());
+        const key = ['radio', service, song.id].join(':');
+
+        song.service = service;
+        queueItem.status = QueueItemStatus.WAITING;
+        queueItem.song = song;
+        queueItem.fp = fp;
         emitUpdate();
-        return;
-      }
 
-      // reject if too long
-      if (song.duration > 2 * 60 * 60) {
-        queueItem.status = QueueItemStatus.INVALID;
-        queueItem.error = new Error('Track is too long');
-        emitUpdate();
-        return;
-      }
+        const getFile = (fp: string, cb: (error: ?Error, success?: boolean) => void) => {
+          const download = () => {
+            mkdirp(cache, err2 => {
+              if (err2) {
+                cb(err2);
+                return;
+              }
 
-      const service = handler.constructor.name.toLowerCase();
-      const cache = path.join(this.app.config.radio.cache, service);
-      const fp = path.join(cache, song.id.toString());
-      const key = ['radio', service, song.id].join(':');
+              handler
+                .download(fs.createWriteStream(fp))
+                .on('error', err3 => {
+                  done();
+                  cb(err3);
+                })
+                .on('finish', () => {
+                  done();
+                  cb(null, true);
+                });
 
-      song.service = service;
-      queueItem.status = QueueItemStatus.WAITING;
-      queueItem.song = song;
-      queueItem.fp = fp;
-      emitUpdate();
+              queueItem.status = QueueItemStatus.DOWNLOADING;
+              emitUpdate();
+            });
+          };
 
-      const getFile = (fp: string, cb: (error: ?Error, success?: boolean) => void) => {
-        const download = () => {
-          mkdirp(cache, err2 => {
-            if (err2) {
-              cb(err2);
-              return;
+          fs.stat(fp, (err, stats) => {
+            // not cached
+            if (err) {
+              if (err.code === 'ENOENT') {
+                download();
+              } else {
+                cb(err);
+              }
+              // cached
+            } else if (stats.size === 0) {
+              download();
+            } else {
+              cb(null, true);
             }
-
-            handler
-              .download(fs.createWriteStream(fp))
-              .on('error', err3 => {
-                cb(err3);
-              })
-              .on('finish', () => {
-                cb(null, true);
-              });
-
-            queueItem.status = QueueItemStatus.DOWNLOADING;
-            emitUpdate();
           });
         };
 
-        fs.stat(fp, (err, stats) => {
-          // not cached
-          if (err) {
-            if (err.code === 'ENOENT') {
-              this.taskRunner.queueTask(download);
-            } else {
-              cb(err);
-            }
-            // cached
-          } else if (stats.size === 0) {
-            this.taskRunner.queueTask(download);
-          } else {
-            cb(null, true);
-          }
-        });
-      };
-
-      function promisify(func: (cb: (err: ?Error, res?: any) => void) => any) {
-        return new Promise((resolve, reject) => {
-          func((err: ?Error, res?: any) => {
-            if (err) {
-              reject(err);
-            } else {
-              resolve(res);
-            }
+        function promisify(func: (cb: (err: ?Error, res?: any) => void) => any) {
+          return new Promise((resolve, reject) => {
+            func((err: ?Error, res?: any) => {
+              if (err) {
+                reject(err);
+              } else {
+                resolve(res);
+              }
+            });
           });
-        });
-      }
+        }
 
-      Promise.all([promisify(cb => getFile(fp, cb)), promisify(cb => this.app.db.get(key, cb))])
-        .then((res: any[]) => {
-          const self = this;
-          function finish(song: SongInfoExtended) {
-            queueItem.status = QueueItemStatus.DONE;
-            emitUpdate();
+        Promise.all([promisify(cb => getFile(fp, cb)), promisify(cb => this.app.db.get(key, cb))])
+          .then((res: any[]) => {
+            const self = this;
+            function finish(song: SongInfoExtended) {
+              queueItem.status = QueueItemStatus.DONE;
+              emitUpdate();
 
-            self.app.db
-              .multi()
-              .set(key, JSON.stringify(song))
-              .sadd(['radio', service].join(':'), song.id)
-              .exec();
-          }
+              self.app.db
+                .multi()
+                .set(key, JSON.stringify(song))
+                .sadd(['radio', service].join(':'), song.id)
+                .exec();
+            }
 
-          let data;
-          try {
-            data = JSON.parse(res[1]);
-          } catch (e) {}
+            let data;
+            try {
+              data = JSON.parse(res[1]);
+            } catch (e) {}
 
-          if (!data) {
-            queueItem.status = QueueItemStatus.PROCESSING;
-            emitUpdate();
+            if (!data) {
+              queueItem.status = QueueItemStatus.PROCESSING;
+              emitUpdate();
 
-            replaygain(fp)
-              .then(gain => {
-                song.gain = gain;
-                finish(song);
-              })
-              .catch(err => {
-                emitter.emit('error', err);
-              });
-          } else {
-            song.gain = data.gain;
-            finish(song);
-          }
-        })
-        .catch(err => {
-          emitter.emit(err);
-        });
-    });
-
+              replaygain(fp)
+                .then(gain => {
+                  song.gain = gain;
+                  finish(song);
+                })
+                .catch(err => {
+                  emitter.emit('error', err);
+                });
+            } else {
+              song.gain = data.gain;
+              finish(song);
+            }
+          })
+          .catch(err => {
+            emitter.emit(err);
+          });
+      });
+    };
+    this.taskRunner.queueTask(getMetaWrapper);
     return emitter;
   }
 
