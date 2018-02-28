@@ -21,7 +21,7 @@ export default function parsePlaylist(
   if (pageToken) {
     options.pageToken = pageToken;
   }
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     https.get(GET_URL + querystring.stringify(options), res => {
       const buffer = [];
 
@@ -32,6 +32,10 @@ export default function parsePlaylist(
       res.on('end', () => {
         const data = Buffer.concat(buffer).toString();
         const parsedData = JSON.parse(data);
+        if (parsedData.error) {
+          reject(new Error(parsedData.error.message));
+          return;
+        }
         for (const item of parsedData.items) {
           if (
             !(item.snippet.title === 'Private video' || item.snippet.title === 'Deleted video') &&
@@ -49,7 +53,7 @@ export default function parsePlaylist(
       });
 
       res.on('error', err => {
-        console.error(err);
+        reject(err);
       });
     });
   });
