@@ -110,24 +110,24 @@ export default class Bot extends EventEmitter {
           radio
             .addSong(args[1], message.author)
             .then(result => {
-              if (result.length === 1) {
-                result[0].on('error', err => {
-                  message.reply(`I couldn't add that! The error was: \`${err.message}\``);
-                  console.error(err.stack);
-                });
-
-                result[0].on('done', song => {
-                  const duration = timeStr(song.duration);
-
-                  message.reply(
-                    `queueing ${song.title} [${duration}] uploaded by ${song.uploader.name}` + '' // ` (${rating_str}★ / ${views_str} views)`
-                  );
-
-                  setTopic();
-                });
-              } else {
-                message.reply(`Queueing a playlist of ${result.length} items.`);
+              if (result.length !== 1) {
+                message.reply(`queueing a playlist of ${result.length} items.`);
               }
+              const [emitter] = result;
+              emitter.on('error', err => {
+                message.reply(`I couldn't add that! The error was: \`${err.message}\``);
+                console.error(err.stack);
+              });
+
+              emitter.on('done', song => {
+                const duration = timeStr(song.duration);
+
+                message.reply(
+                  `queueing ${song.title} [${duration}] uploaded by ${song.uploader.name}` + '' // ` (${rating_str}★ / ${views_str} views)`
+                );
+
+                setTopic();
+              });
             })
             .catch(reason => message.reply(`Oops! Something went wrong! Error: ${reason}`));
           break;

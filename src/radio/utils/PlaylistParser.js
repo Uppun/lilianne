@@ -36,6 +36,7 @@ export default function parsePlaylist(
           reject(new Error(parsedData.error.message));
           return;
         }
+
         for (const item of parsedData.items) {
           if (
             !(item.snippet.title === 'Private video' || item.snippet.title === 'Deleted video') &&
