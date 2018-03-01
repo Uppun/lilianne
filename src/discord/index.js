@@ -112,6 +112,7 @@ export default class Bot extends EventEmitter {
             .then(result => {
               if (result.length !== 1) {
                 message.reply(`queueing a playlist of ${result.length} items.`);
+                return;
               }
               const [emitter] = result;
               emitter.on('error', err => {
