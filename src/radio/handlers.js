@@ -2,36 +2,34 @@
 
 import {Writable} from 'stream';
 import type {ConfigOptions} from '..';
-import soundcloud from './handlers/soundcloud';
-import youtube from './handlers/youtube';
+import SoundCloud from './handlers/soundcloud';
+import YouTube from './handlers/youtube';
 
-const handlers: Array<Class<Handler>> = [soundcloud, youtube];
+const handlers: * = [SoundCloud, YouTube];
 
 export interface Handler {
-  // constructor(link: string, config: $PropertyType<ConfigOptions, 'services'>): Handler;
+  // constructor(link: string, config: $PropertyType<ConfigOptions, 'services'>);
   // static match(link: string): boolean;
-  getMeta(cb: (error: ?Error, song?: SongInfo) => void): void;
+  getMeta(): Promise<SongInfo>;
   download(stream: Writable): Writable;
 }
 
-export interface SongInfo {
-  id: string;
-  title: string;
-  url: string;
-  image: string;
-  duration: number; // in seconds
-  plays: string;
+export type SongInfo = {
+  id: string,
+  title: string,
+  url: string,
+  image: string,
+  duration: number, // in seconds
+  plays: string,
   uploader: {
     name: string,
     url: string,
-  };
-}
+  },
+};
 
-export default function getHandler(link: string, config: ConfigOptions) {
+export function getHandler(link: string, config: ConfigOptions): ?Handler {
   for (const Handler of handlers) {
-    // $FlowFixMe
     if (Handler.match(link)) {
-      // $FlowFixMe
       return new Handler(link, config.services);
     }
   }

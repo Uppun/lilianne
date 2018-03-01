@@ -1,23 +1,26 @@
 /* @flow */
-/* eslint-disable no-param-reassign, no-shadow */
 
 import fs from 'fs';
 import path from 'path';
 import events from 'events';
+import {URL} from 'url';
+import {promisify} from 'util';
 
 import uuid from 'uuid/v4';
 import mkdirp from 'mkdirp';
 import Discord from 'discord.js';
 
 import Application from '..';
-import handlers from './handlers';
-import type {SongInfo} from './handlers';
+import {getHandler} from './handlers';
 import replaygain from './replaygain';
 import TaskRunner from './utils/TaskRunner';
-import playlistParser from './utils/PlaylistParser';
-import {URL} from 'url';
+import {parsePlaylist} from './utils/YoutubeUtils';
+import {getWithDefault} from './utils/MapUtils';
+
+import type {SongInfo} from './handlers';
 
 const {EventEmitter} = events;
+const stat = promisify(fs.stat);
 
 export const QueueItemStatus = {
   INVALID: 0,
@@ -28,23 +31,23 @@ export const QueueItemStatus = {
   DONE: 5,
 };
 
-export interface SongInfoExtended extends SongInfo {
-  service: string;
-  gain: number;
+export type SongInfoExtended = SongInfo & {
+  service: string,
+  gain: number,
   player: {
     dj: UserInfo,
     startTime: number, // in ms
     currentTime?: number, // in ms
-  };
-}
+  },
+};
 
-export interface UserInfo {
-  name: string;
-  username: string;
-  discriminator: string;
-  id: string;
-  avatar: string;
-}
+export type UserInfo = {
+  name: string,
+  username: string,
+  discriminator: string,
+  id: string,
+  avatar: string,
+};
 
 function skipRatio(length: number) {
   const minutes = length / 60;
@@ -62,7 +65,7 @@ export type QueueItem = {
   song?: SongInfoExtended,
   id: string,
   status: $Values<typeof QueueItemStatus>,
-  error?: Error,
+  error?: string,
 };
 
 class Radio extends EventEmitter {
@@ -86,7 +89,7 @@ class Radio extends EventEmitter {
     this.taskRunner = new TaskRunner();
 
     // eslint-disable-next-line handle-callback-err
-    app.db.lrange('radio:history', 0, 19, (err: Error, res?: string[]) => {
+    app.db.lrange('radio:history', 0, 19, (_err: Error, res: string[]) => {
       if (res) {
         this.history = res.map(s => JSON.parse(s));
         this.emit('history', this.history);
@@ -150,13 +153,16 @@ class Radio extends EventEmitter {
     this.emit('skips', this.skips, needed);
   }
 
-  addSong(link: string, user: Discord.User): Promise<Array<*>> {
-    const passedUrl = new URL(link);
-    if (passedUrl.pathname === '/playlist' && passedUrl.searchParams.has('list')) {
-      return playlistParser(String(passedUrl.searchParams.get('list')), this.app.config.youtube.key).then(items =>
+  addSong(link: string, user: Discord.User): Promise<EventEmitter[]> {
+    const url = new URL(link);
+    if (url.pathname === '/playlist' && url.searchParams.has('list')) {
+      // $FlowFixMe
+      const playlistId: string = url.searchParams.get('list');
+      return parsePlaylist(playlistId, this.app.config.youtube.key).then(items =>
         items.map(item => this._addSong(item, user))
       );
     }
+
     return Promise.resolve([this._addSong(link, user)]);
   }
 
@@ -168,8 +174,7 @@ class Radio extends EventEmitter {
       status: QueueItemStatus.UNKNOWN,
     };
 
-    if (!this.queues.has(user.id)) this.queues.set(user.id, []);
-    const q = this.queues.get(user.id) || [];
+    const q = getWithDefault(this.queues, user.id, []);
     q.push(queueItem);
     this.emit('queue', user, q);
 
@@ -186,86 +191,82 @@ class Radio extends EventEmitter {
       }
     };
 
-    const handler = handlers(link, this.app.config);
+    const handler = getHandler(link, this.app.config);
     if (!handler) {
       queueItem.status = QueueItemStatus.INVALID;
-      queueItem.error = new Error('Invalid URL');
+      queueItem.error = 'Invalid URL';
       emitUpdate(true);
       return emitter;
     }
 
-    const getMetaWrapper = done => {
-      handler.getMeta((err, song: SongInfoExtended) => {
-        if (err) {
-          queueItem.status = QueueItemStatus.INVALID;
-          queueItem.error = err;
+    this.taskRunner.queueTask(() =>
+      handler
+        .getMeta()
+        .then((songInfo: SongInfo) => {
+          // $FlowFixMe
+          const song: SongInfoExtended = {...songInfo};
+
+          // reject if too long
+          if (song.duration > 2 * 60 * 60) {
+            // TODO(meishu): const this value somewhere
+            throw new Error('Track is too long');
+          }
+
+          const service = handler.constructor.name.toLowerCase();
+          const cache = path.join(this.app.config.radio.cache, service);
+          const fp = path.join(cache, song.id.toString());
+          const key = ['radio', service, song.id].join(':');
+
+          song.service = service;
+          queueItem.status = QueueItemStatus.WAITING;
+          queueItem.song = song;
+          queueItem.fp = fp;
           emitUpdate();
-          return;
-        }
 
-        // reject if too long
-        if (song.duration > 2 * 60 * 60) {
-          queueItem.status = QueueItemStatus.INVALID;
-          queueItem.error = new Error('Track is too long');
-          emitUpdate();
-          return;
-        }
+          const download = (filepath: string): Promise<*> =>
+            // Check the cached file.
+            stat(filepath)
+              // If it exists but is empty, pretend it doesn't exist.
+              .then(stats => {
+                if (stats.size === 0) {
+                  const err = new Error();
+                  // $FlowFixMe
+                  err.code = 'ENOENT';
+                  throw err;
+                }
+              })
+              // We expect ENOENT if it doesn't exist. Re-throw any other error.
+              .catch(err => {
+                if (err.code !== 'ENOENT') {
+                  throw err;
+                }
 
-        const service = handler.constructor.name.toLowerCase();
-        const cache = path.join(this.app.config.radio.cache, service);
-        const fp = path.join(cache, song.id.toString());
-        const key = ['radio', service, song.id].join(':');
+                return (
+                  // Create cache directory if needed.
+                  promisify(mkdirp)(cache)
+                    // Download the song.
+                    .then(
+                      () =>
+                        new Promise((resolve, reject) => {
+                          queueItem.status = QueueItemStatus.DOWNLOADING;
+                          emitUpdate();
 
-        song.service = service;
-        queueItem.status = QueueItemStatus.WAITING;
-        queueItem.song = song;
-        queueItem.fp = fp;
-        emitUpdate();
+                          handler
+                            .download(fs.createWriteStream(filepath))
+                            .on('error', err => {
+                              reject(err);
+                            })
+                            .on('finish', () => {
+                              resolve();
+                            });
+                        })
+                    )
+                );
+              });
 
-        const getFile = (fp: string, cb: (error: ?Error, success?: boolean) => void) => {
-          const download = () => {
-            mkdirp(cache, err2 => {
-              if (err2) {
-                cb(err2);
-                return;
-              }
-
-              handler
-                .download(fs.createWriteStream(fp))
-                .on('error', err3 => {
-                  done();
-                  cb(err3);
-                })
-                .on('finish', () => {
-                  done();
-                  cb(null, true);
-                });
-
-              queueItem.status = QueueItemStatus.DOWNLOADING;
-              emitUpdate();
-            });
-          };
-
-          fs.stat(fp, (err, stats) => {
-            // not cached
-            if (err) {
-              if (err.code === 'ENOENT') {
-                download();
-              } else {
-                cb(err);
-              }
-              // cached
-            } else if (stats.size === 0) {
-              download();
-            } else {
-              cb(null, true);
-            }
-          });
-        };
-
-        function promisify(func: (cb: (err: ?Error, res?: any) => void) => any) {
-          return new Promise((resolve, reject) => {
-            func((err: ?Error, res?: any) => {
+          // FIXME(meishu): this is gross
+          const getCachedSongInfo = new Promise((resolve, reject) => {
+            this.app.db.get(key, (err, res) => {
               if (err) {
                 reject(err);
               } else {
@@ -273,50 +274,49 @@ class Radio extends EventEmitter {
               }
             });
           });
-        }
 
-        Promise.all([promisify(cb => getFile(fp, cb)), promisify(cb => this.app.db.get(key, cb))])
-          .then((res: any[]) => {
-            const self = this;
-            function finish(song: SongInfoExtended) {
-              queueItem.status = QueueItemStatus.DONE;
-              emitUpdate();
+          return (
+            Promise.all([download(fp), getCachedSongInfo])
+              // Get ReplayGain amount.
+              .then((res: *) => {
+                let cachedSong;
+                try {
+                  cachedSong = JSON.parse(res[1]);
+                  return cachedSong.gain;
+                } catch (e) {}
 
-              self.app.db
-                .multi()
-                .set(key, JSON.stringify(song))
-                .sadd(['radio', service].join(':'), song.id)
-                .exec();
-            }
+                queueItem.status = QueueItemStatus.PROCESSING;
+                emitUpdate();
 
-            let data;
-            try {
-              data = JSON.parse(res[1]);
-            } catch (e) {}
+                return replaygain(fp);
+              })
+              // Save info, emit, and persist.
+              .then(gain => {
+                song.gain = gain;
+                queueItem.status = QueueItemStatus.DONE;
+                emitUpdate();
 
-            if (!data) {
-              queueItem.status = QueueItemStatus.PROCESSING;
-              emitUpdate();
+                // TODO(meishu): should wait for this before resolving
+                this.app.db
+                  .multi()
+                  .set(key, JSON.stringify(song))
+                  .sadd(['radio', service].join(':'), song.id)
+                  .exec();
+              })
+          );
+        })
+        .catch((err: Error) => {
+          console.warn(err);
 
-              replaygain(fp)
-                .then(gain => {
-                  song.gain = gain;
-                  finish(song);
-                })
-                .catch(err => {
-                  emitter.emit('error', err);
-                });
-            } else {
-              song.gain = data.gain;
-              finish(song);
-            }
-          })
-          .catch(err => {
-            emitter.emit(err);
-          });
-      });
-    };
-    this.taskRunner.queueTask(getMetaWrapper);
+          queueItem.status = QueueItemStatus.INVALID;
+          queueItem.error = err.message;
+          emitUpdate();
+
+          emitter.emit('error', err);
+          throw err;
+        })
+    );
+
     return emitter;
   }
 
@@ -341,38 +341,49 @@ class Radio extends EventEmitter {
       this.history.unshift(this.current);
       while (this.history.length > 20) this.history.pop();
 
-      this.app.db.lpush('radio:history', JSON.stringify(this.current)); // TODO
+      this.app.db.lpush('radio:history', JSON.stringify(this.current));
     }
 
-    if (this.order.length > 0) {
-      // $FlowFixMe
-      const index = this.order.findIndex(u => this.queues.has(u.id) && this.queues.get(u.id).length > 0);
-      if (index !== -1) {
-        const user = this.order[index];
-        const queue = this.queues.get(user.id) || [];
-        const data = queue.shift();
+    let orderIndex = -1;
+    let songIndex;
+    let user;
+    let queue;
 
-        this.order.push(...this.order.splice(0, index + 1));
-
-        const {fp} = data;
-        this.current = data.song;
-        // $FlowFixMe
-        this.current.player = {
-          dj: trimUser(user),
-          startTime: Date.now(),
-        };
-
-        this.emit('song', fp, this.current);
-        this.emit('order', this.order);
-        this.emit('queue', user, queue);
-        return;
+    for (let i = 0; i < this.order.length; i++) {
+      user = this.order[i];
+      queue = this.queues.get(user.id);
+      if (queue) {
+        songIndex = queue.findIndex(item => item.status === QueueItemStatus.DONE);
+        if (songIndex !== -1) {
+          orderIndex = i;
+          break;
+        }
       }
     }
 
-    if (this.current) {
-      this.current = null;
-      this.emit('song', null);
+    if (orderIndex === -1) {
+      if (this.current) {
+        this.current = null;
+        this.emit('song', null);
+      }
+      return;
     }
+
+    this.order.push(...this.order.splice(0, orderIndex + 1));
+
+    // $FlowFixMe
+    const data = queue.splice(songIndex, 1)[0];
+
+    this.current = data.song;
+    // $FlowFixMe
+    this.current.player = {
+      dj: trimUser(user),
+      startTime: Date.now(),
+    };
+
+    this.emit('song', data.fp, this.current);
+    this.emit('order', this.order);
+    this.emit('queue', user, queue);
   }
 }
 

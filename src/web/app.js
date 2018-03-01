@@ -3,8 +3,10 @@
 import Discord from 'discord.js';
 
 import Web from '.';
-import {SongInfoExtended, UserInfo, trimUser} from '../radio';
-import type {QueueItem} from '../radio';
+import {trimUser} from '../radio';
+
+import type {SongInfoExtended, UserInfo, QueueItem} from '../radio';
+
 export default function webapp(web: Web) {
   const {base, io} = web;
   const {radio} = base;

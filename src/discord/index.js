@@ -114,6 +114,7 @@ export default class Bot extends EventEmitter {
                 message.reply(`queueing a playlist of ${result.length} items.`);
                 return;
               }
+
               const [emitter] = result;
               emitter.on('error', err => {
                 message.reply(`I couldn't add that! The error was: \`${err.message}\``);
