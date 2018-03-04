@@ -134,6 +134,15 @@ export default class Bot extends EventEmitter {
             .catch(reason => message.reply(`Oops! Something went wrong! Error: ${reason}`));
           break;
         }
+        case '!skip': {
+          const res = radio.voteSkip(message.author);
+          if (!res) {
+            message.reply(`Error: You must be in the voice channel to vote to skip songs!`);
+            break;
+          }
+          message.reply(`Vote registered!`);
+          break;
+        }
         default: {
           break; // do nothing
         }
@@ -167,7 +176,12 @@ export default class Bot extends EventEmitter {
       }
       setTopic();
     });
-
+    radio.on('skips', (skips, needed) => {
+      bot.sendMessage({
+        to: this.chatChannel,
+        message: `There are ${skips.size} votes to skip. ${needed} total votes are required.`,
+      });
+    });
     this.client = bot;
   }
 }
