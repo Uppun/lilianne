@@ -5,9 +5,11 @@ export const SET_DJ_ORDER = 'SET_DJ_ORDER';
 export const SET_CURRENT_SONG = 'SET_CURRENT_SONG';
 export const SET_LOCAL_QUEUE = 'SET_LOCAL_QUEUE';
 export const SET_SONG_STATUS = 'SET_SONG_STATUS';
+export const SET_SKIP_STATUS = 'SET_SKIP_STATUS';
 
 export const ADD_SONG = 'ADD_SONG';
 export const REMOVE_SONG = 'REMOVE_SONG';
+export const VOTE_SKIP = 'VOTE_SKIP';
 
 const createAction = type => payload => ({type, payload});
 
@@ -18,6 +20,8 @@ export const setDjOrder = createAction(SET_DJ_ORDER);
 export const setCurrentSong = createAction(SET_CURRENT_SONG);
 export const setLocalQueue = createAction(SET_LOCAL_QUEUE);
 export const setSongStatus = createAction(SET_SONG_STATUS);
+export const setSkipStatus = createAction(SET_SKIP_STATUS);
 
 export const addSong = createAction(ADD_SONG);
 export const removeSong = createAction(REMOVE_SONG);
+export const voteSkip = createAction(VOTE_SKIP);

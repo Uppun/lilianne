@@ -21,6 +21,13 @@ export default function reduceCurrent(state = null, action, songs) {
     case SET_CURRENT_SONG:
       return reduceSong(action.payload);
 
+    case SET_SKIP_STATUS:
+      return {
+        ...state,
+        skips: action.payload.skips,
+        needed: action.payload.needed,
+      };
+
     default:
       return state;
   }

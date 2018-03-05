@@ -12,6 +12,8 @@ export const socketMiddleware = store => next => action => {
       case actions.REMOVE_SONG:
         socket.emit('delete', action.payload.id);
         break;
+      case actions.VOTE_SKIP:
+        socket.emit('voteSkip');
       // TODO
       default:
         break;
@@ -59,3 +61,7 @@ export default store => {
     store.dispatch(actions.setSongStatus(queueItem));
   });
 };
+
+socket.on('skips', (skips, needed) => {
+  store.dispatch(actions.setSkipStatus(skips.size, needed));
+});

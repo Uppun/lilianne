@@ -134,23 +134,29 @@ class Radio extends EventEmitter {
   voteSkip(user: Discord.User) {
     if (this.current && user.id === this.current.player.dj.id) {
       this.getNext();
+      this.skips.clear();
       return true;
     }
 
     if (!this.order.some(u => u.equals(user))) return false;
 
     this.skips.add(user.id);
-    this.checkSkips();
+    const needed = this.checkSkips();
+    if (needed != -1 && this.skips.size >= needed) {
+      this.getNext();
+      this.skips.clear();
+    }
     return true;
   }
 
   checkSkips() {
-    if (!this.current) return false;
+    if (!this.current) return -1;
 
     const ratio = skipRatio(this.current.duration);
     const total = this.order.length;
     const needed = Math.ceil(ratio * total);
     this.emit('skips', this.skips, needed);
+    return needed;
   }
 
   addSong(link: string, user: Discord.User): Promise<EventEmitter[]> {
