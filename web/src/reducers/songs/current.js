@@ -1,4 +1,4 @@
-import {INITIALIZE, SET_CURRENT_SONG} from '../../actions';
+import {INITIALIZE, SET_CURRENT_SONG, SET_SKIP_STATUS} from '../../actions';
 import {getUid} from './items';
 import {getSong} from '../songs';
 import {getUser} from '../users';

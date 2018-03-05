@@ -60,8 +60,8 @@ export default store => {
   socket.on('add status', queueItem => {
     store.dispatch(actions.setSongStatus(queueItem));
   });
-};
 
-socket.on('skips', (skips, needed) => {
-  store.dispatch(actions.setSkipStatus(skips.size, needed));
-});
+  socket.on('skips', (skips, needed) => {
+    store.dispatch(actions.setSkipStatus(skips.size, needed));
+  });
+};
