@@ -57,7 +57,7 @@ function CurrentSong({song, dj, startTime, offset, skips, doVoteSkip, members}) 
             Skip
           </button>
           <span className={skipTextClassName}>
-            {skips && needed && skips > 0 ? `${skips}/${votesNeeded} votes` : `0/${votesNeeded} votes`}
+            {skips && skips > 0 ? `${skips}/${votesNeeded} votes` : `0/${votesNeeded} votes`}
           </span>
         </div>
         <SongProgress startTime={startTime + offset} duration={song.duration} />
