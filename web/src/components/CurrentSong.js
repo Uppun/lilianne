@@ -1,15 +1,15 @@
 import React from 'react';
 import classNames from 'classnames';
 import {connect} from 'react-redux';
-import {getCurrentSong, getCurrentSkip} from '../reducers/songs/current';
+import {getCurrentSong} from '../reducers/songs/current';
 import {getMemberList} from '../reducers/members';
 import {voteSkip} from '../actions';
 
 import {UserAvatar} from './DiscordIcon';
 import SongProgress from './SongProgress';
 
-function CurrentSong({song, dj, startTime, offset, skips, needed, doVoteSkip, members}) {
-  const minutes = length / 60;
+function CurrentSong({song, dj, startTime, offset, skips, doVoteSkip, members}) {
+  const minutes = song.duration / 60;
   const skipThreshold = 0.6 - 0.3 / (1 + Math.exp(3 - minutes / 3));
   const votesNeeded = Math.ceil(skipThreshold * members.length);
   const skipTextClassName = classNames({inactive: !skips});
@@ -57,7 +57,7 @@ function CurrentSong({song, dj, startTime, offset, skips, needed, doVoteSkip, me
             Skip
           </button>
           <span className={skipTextClassName}>
-            {skips && needed && skips > 0 ? `${skips}/${needed} votes` : `0/${votesNeeded} votes`}
+            {skips && needed && skips > 0 ? `${skips}/${votesNeeded} votes` : `0/${votesNeeded} votes`}
           </span>
         </div>
         <SongProgress startTime={startTime + offset} duration={song.duration} />

@@ -150,7 +150,7 @@ class Radio extends EventEmitter {
     const total = this.order.length;
     const needed = Math.ceil(ratio * total);
     this.emit('skips', this.skips, needed);
-    if (needed != -1 && this.skips.size >= needed) {
+    if (needed !== -1 && this.skips.size >= needed) {
       this.getNext();
     }
     return true;

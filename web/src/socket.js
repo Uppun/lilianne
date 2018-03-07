@@ -14,6 +14,7 @@ export const socketMiddleware = store => next => action => {
         break;
       case actions.VOTE_SKIP:
         socket.emit('voteSkip');
+        break;
       // TODO
       default:
         break;
