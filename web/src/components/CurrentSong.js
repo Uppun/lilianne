@@ -2,11 +2,17 @@ import React from 'react';
 import classNames from 'classnames';
 import {connect} from 'react-redux';
 import {getCurrentSong, getCurrentSkip} from '../reducers/songs/current';
+import {getMemberList} from '../reducers/members';
+import {voteSkip} from '../actions';
 
 import {UserAvatar} from './DiscordIcon';
 import SongProgress from './SongProgress';
 
-function CurrentSong({song, dj, startTime, offset, skips, needed}) {
+function CurrentSong({song, dj, startTime, offset, skips, needed, doVoteSkip, members}) {
+  const minutes = length / 60;
+  const skipThreshold = 0.6 - 0.3 / (1 + Math.exp(3 - minutes / 3));
+  const votesNeeded = Math.ceil(skipThreshold * members.length);
+  console.log(members);
   if (!song)
     return (
       <div className="current-song-wrap flex-horizontal">
@@ -47,13 +53,22 @@ function CurrentSong({song, dj, startTime, offset, skips, needed}) {
           <span className="dj-name">{dj.name}</span>
         </div>
         <div className="skip">
-          <button className="btn">Skip</button>
-          <span>{skips && needed && skips > 0 ? `skip votes: ${skips} needed: ${needed}` : ``}</span>
+          <button className="btn" onClick={doVoteSkip}>
+            Skip
+          </button>
+          <span>{skips && needed && skips > 0 ? `${skips}/${needed} votes` : `0/${votesNeeded} votes`}</span>
         </div>
         <SongProgress startTime={startTime + offset} duration={song.duration} />
       </div>
     </div>
   );
+}
+
+function mapStateToProps(state) {
+  return {
+    ...getCurrentSong(state), // figure out what this returns
+    ...getMemberList(state), // figure out what this returns
+  };
 }
 
 function mapDispatchToProps(dispatch) {
@@ -63,4 +78,4 @@ function mapDispatchToProps(dispatch) {
     },
   };
 }
-export default connect(getCurrentSong, mapDispatchToProps)(CurrentSong);
+export default connect(mapStateToProps, mapDispatchToProps)(CurrentSong);

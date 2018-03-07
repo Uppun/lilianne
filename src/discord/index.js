@@ -176,12 +176,11 @@ export default class Bot extends EventEmitter {
       }
       setTopic();
     });
-    radio.on('skips', (skips, needed) => {
-      bot.sendMessage({
-        to: this.chatChannel,
-        message: `There are ${skips.size} votes to skip. ${needed} total votes are required.`,
-      });
-    });
+    /*radio.on('skips', (skips, needed) => {
+      if (this.chatChannel) {
+        this.chatChannel.send(`There are ${skips.size} votes to skip. ${needed} total votes are required.`);
+      }
+    });*/
     this.client = bot;
   }
 }

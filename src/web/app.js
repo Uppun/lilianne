@@ -19,7 +19,7 @@ export default function webapp(web: Web) {
   });
 
   radio.on('skips', (skips, needed) => {
-    io.emit('skips', skips, needed);
+    io.emit('skips', Array.from(skips), needed);
   });
 
   radio.on('song', (fp, song) => {

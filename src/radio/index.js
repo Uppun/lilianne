@@ -134,7 +134,6 @@ class Radio extends EventEmitter {
   voteSkip(user: Discord.User) {
     if (this.current && user.id === this.current.player.dj.id) {
       this.getNext();
-      this.skips.clear();
       return true;
     }
 
@@ -144,7 +143,6 @@ class Radio extends EventEmitter {
     const needed = this.checkSkips();
     if (needed != -1 && this.skips.size >= needed) {
       this.getNext();
-      this.skips.clear();
     }
     return true;
   }

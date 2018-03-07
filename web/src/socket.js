@@ -62,6 +62,6 @@ export default store => {
   });
 
   socket.on('skips', (skips, needed) => {
-    store.dispatch(actions.setSkipStatus(skips.size, needed));
+    store.dispatch(actions.setSkipStatus({skips: skips.length, needed}));
   });
 };
