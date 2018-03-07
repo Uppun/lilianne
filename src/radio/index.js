@@ -138,19 +138,20 @@ class Radio extends EventEmitter {
     }
 
     if (!this.order.some(u => u.equals(user))) return false;
-    this.checkSkips();
     this.skips.add(user.id);
+    this.checkSkips();
+
     return true;
   }
 
   checkSkips() {
-    if (!this.current) return -1;
+    if (!this.current) return false;
 
     const ratio = skipRatio(this.current.duration);
     const total = this.order.length;
     const needed = Math.ceil(ratio * total);
     this.emit('skips', this.skips, needed);
-    if (needed !== -1 && this.skips.size >= needed) {
+    if (this.skips.size >= needed) {
       this.getNext();
     }
     return true;

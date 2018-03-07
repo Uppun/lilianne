@@ -18,8 +18,8 @@ export default function webapp(web: Web) {
     io.emit('history', history);
   });
 
-  radio.on('skips', (skips, needed) => {
-    io.emit('skips', Array.from(skips), needed);
+  radio.on('skips', skips => {
+    io.emit('skips', Array.from(skips));
   });
 
   radio.on('song', (fp, song) => {
@@ -104,7 +104,7 @@ export default function webapp(web: Web) {
       radio.removeSong(user, qid);
     });
 
-    socket.on('voteSkip', () => {
+    socket.on('skip', () => {
       radio.voteSkip(user);
     });
 

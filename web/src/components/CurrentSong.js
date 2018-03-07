@@ -8,11 +8,7 @@ import {voteSkip} from '../actions';
 import {UserAvatar} from './DiscordIcon';
 import SongProgress from './SongProgress';
 
-function CurrentSong({song, dj, startTime, offset, skips, doVoteSkip, members}) {
-  const minutes = song.duration / 60;
-  const skipThreshold = 0.6 - 0.3 / (1 + Math.exp(3 - minutes / 3));
-  const votesNeeded = Math.ceil(skipThreshold * members.length);
-  const skipTextClassName = classNames({inactive: !skips});
+function CurrentSong({song, dj, startTime, offset, skips = 0, doVoteSkip, members}) {
   if (!song)
     return (
       <div className="current-song-wrap flex-horizontal">
@@ -21,6 +17,11 @@ function CurrentSong({song, dj, startTime, offset, skips, doVoteSkip, members}) 
         </div>
       </div>
     );
+
+  const minutes = song.duration / 60;
+  const skipThreshold = 0.6 - 0.3 / (1 + Math.exp(3 - minutes / 3));
+  const votesNeeded = Math.ceil(skipThreshold * members.length);
+  const skipTextClassName = classNames({inactive: !skips});
 
   return (
     <div className="current-song-wrap flex-horizontal">
@@ -57,7 +58,7 @@ function CurrentSong({song, dj, startTime, offset, skips, doVoteSkip, members}) 
             Skip
           </button>
           <span className={skipTextClassName}>
-            {skips && skips > 0 ? `${skips}/${votesNeeded} votes` : `0/${votesNeeded} votes`}
+            {skips > 0 ? `${skips}/${votesNeeded} votes` : `0/${votesNeeded} votes`}
           </span>
         </div>
         <SongProgress startTime={startTime + offset} duration={song.duration} />
@@ -80,4 +81,5 @@ function mapDispatchToProps(dispatch) {
     },
   };
 }
+
 export default connect(mapStateToProps, mapDispatchToProps)(CurrentSong);

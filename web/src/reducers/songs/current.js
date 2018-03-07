@@ -25,7 +25,6 @@ export default function reduceCurrent(state = null, action, songs) {
       return {
         ...state,
         skips: action.payload.skips,
-        needed: action.payload.needed,
       };
 
     default:

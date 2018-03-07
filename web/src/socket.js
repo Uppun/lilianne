@@ -13,7 +13,7 @@ export const socketMiddleware = store => next => action => {
         socket.emit('delete', action.payload.id);
         break;
       case actions.VOTE_SKIP:
-        socket.emit('voteSkip');
+        socket.emit('skip');
         break;
       // TODO
       default:
@@ -62,7 +62,7 @@ export default store => {
     store.dispatch(actions.setSongStatus(queueItem));
   });
 
-  socket.on('skips', (skips, needed) => {
-    store.dispatch(actions.setSkipStatus({skips: skips.length, needed}));
+  socket.on('skips', skips => {
+    store.dispatch(actions.setSkipStatus({skips: skips.length}));
   });
 };
