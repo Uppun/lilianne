@@ -66,8 +66,8 @@ function CurrentSong({song, dj, startTime, offset, skips, needed, doVoteSkip, me
 
 function mapStateToProps(state) {
   return {
-    ...getCurrentSong(state), // figure out what this returns
-    ...getMemberList(state), // figure out what this returns
+    ...getCurrentSong(state),
+    ...getMemberList(state),
   };
 }
 

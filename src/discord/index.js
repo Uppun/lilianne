@@ -173,14 +173,12 @@ export default class Bot extends EventEmitter {
       if (song && this.voiceConnection) {
         const dispatcher = this.voiceConnection.playFile(fp, {volume: 0});
         dispatcher.setVolumeDecibels(BASELINE_DB + song.gain);
+      } else if (this.voiceConnection && this.voiceConnection.dispatcher) {
+        this.voiceConnection.dispatcher.end();
       }
       setTopic();
     });
-    /*radio.on('skips', (skips, needed) => {
-      if (this.chatChannel) {
-        this.chatChannel.send(`There are ${skips.size} votes to skip. ${needed} total votes are required.`);
-      }
-    });*/
+
     this.client = bot;
   }
 }
