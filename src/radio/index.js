@@ -138,12 +138,8 @@ class Radio extends EventEmitter {
     }
 
     if (!this.order.some(u => u.equals(user))) return false;
-
+    this.checkSkips();
     this.skips.add(user.id);
-    const needed = this.checkSkips();
-    if (needed != -1 && this.skips.size >= needed) {
-      this.getNext();
-    }
     return true;
   }
 
@@ -154,7 +150,10 @@ class Radio extends EventEmitter {
     const total = this.order.length;
     const needed = Math.ceil(ratio * total);
     this.emit('skips', this.skips, needed);
-    return needed;
+    if (needed != -1 && this.skips.size >= needed) {
+      this.getNext();
+    }
+    return true;
   }
 
   addSong(link: string, user: Discord.User): Promise<EventEmitter[]> {

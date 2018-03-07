@@ -12,7 +12,7 @@ function CurrentSong({song, dj, startTime, offset, skips, needed, doVoteSkip, me
   const minutes = length / 60;
   const skipThreshold = 0.6 - 0.3 / (1 + Math.exp(3 - minutes / 3));
   const votesNeeded = Math.ceil(skipThreshold * members.length);
-  console.log(members);
+  const skipTextClassName = classNames({inactive: !skips});
   if (!song)
     return (
       <div className="current-song-wrap flex-horizontal">
@@ -56,7 +56,9 @@ function CurrentSong({song, dj, startTime, offset, skips, needed, doVoteSkip, me
           <button className="btn" onClick={doVoteSkip}>
             Skip
           </button>
-          <span>{skips && needed && skips > 0 ? `${skips}/${needed} votes` : `0/${votesNeeded} votes`}</span>
+          <span className={skipTextClassName}>
+            {skips && needed && skips > 0 ? `${skips}/${needed} votes` : `0/${votesNeeded} votes`}
+          </span>
         </div>
         <SongProgress startTime={startTime + offset} duration={song.duration} />
       </div>

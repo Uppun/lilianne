@@ -310,6 +310,10 @@ h2 {
   padding: 0 8px;
 }
 
+.inactive {
+  opacity: 0.4;
+}
+
 .skip span {
   margin-left: 6px;
 }
