@@ -3,14 +3,14 @@ import {getUid} from './items';
 import {getSong} from '../songs';
 import {getUser} from '../users';
 
-function reduceSong(song, radioSkips) {
+function reduceSong(song, skips = 0) {
   if (!song) return null;
   return {
     song: getUid(song),
     dj: song.player.dj.id,
     startTime: song.player.startTime,
     offset: song.player.startTime - song.player.currentTime,
-    skips: radioSkips || 0,
+    skips,
   };
 }
 
@@ -21,7 +21,7 @@ export default function reduceCurrent(state = null, action, songs) {
 
     case SET_CURRENT_SONG:
       return {
-        ...reduceSong(action.payload),
+        reduceSong(action.payload),
       };
 
     case SET_SKIP_STATUS:
