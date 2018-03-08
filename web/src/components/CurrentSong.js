@@ -8,7 +8,7 @@ import {voteSkip} from '../actions';
 import {UserAvatar} from './DiscordIcon';
 import SongProgress from './SongProgress';
 
-function CurrentSong({song, dj, startTime, offset, skips = 0, doVoteSkip, members}) {
+function CurrentSong({song, dj, startTime, offset, skips, doVoteSkip, members}) {
   if (!song)
     return (
       <div className="current-song-wrap flex-horizontal">
