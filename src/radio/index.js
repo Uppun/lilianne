@@ -138,6 +138,11 @@ class Radio extends EventEmitter {
     }
 
     if (!this.order.some(u => u.equals(user))) return false;
+    if (this.skips.has(user.id)) {
+      this.skips.delete(user.id);
+      this.emit('unskip', this.skips);
+      return true;
+    }
 
     this.skips.add(user.id);
     this.checkSkips();
