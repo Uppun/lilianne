@@ -127,7 +127,7 @@ class Radio extends EventEmitter {
 
     if (this.current) {
       this.skips.delete(user.id);
-      this.checkSkips();
+      this.emit('skips', this.skips);
     }
   }
 
@@ -138,14 +138,15 @@ class Radio extends EventEmitter {
     }
 
     if (!this.order.some(u => u.equals(user))) return false;
+
     if (this.skips.has(user.id)) {
       this.skips.delete(user.id);
-      this.emit('unskip', this.skips);
-      return true;
+    } else {
+      this.skips.add(user.id);
     }
 
-    this.skips.add(user.id);
     this.checkSkips();
+    this.emit('skips', this.skips);
     return true;
   }
 
@@ -155,7 +156,6 @@ class Radio extends EventEmitter {
     const ratio = skipRatio(this.current.duration);
     const total = this.order.length;
     const needed = Math.ceil(ratio * total);
-    this.emit('skips', this.skips);
     if (this.skips.size >= needed) {
       this.getNext();
     }

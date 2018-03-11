@@ -22,10 +22,6 @@ export default function webapp(web: Web) {
     io.emit('skips', Array.from(skips));
   });
 
-  radio.on('unskip', skips => {
-    io.emit('skips', Array.from(skips));
-  });
-
   radio.on('song', (fp, song) => {
     if (song) {
       current = Object.assign({}, song);

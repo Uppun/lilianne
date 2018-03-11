@@ -8,7 +8,7 @@ import {voteSkip} from '../actions';
 import {UserAvatar} from './DiscordIcon';
 import SongProgress from './SongProgress';
 
-function CurrentSong({song, dj, startTime, offset, skips, doVoteSkip, members}) {
+function CurrentSong({song, dj, startTime, offset, skips, self, members, doVoteSkip}) {
   if (!song)
     return (
       <div className="current-song-wrap flex-horizontal">
@@ -21,7 +21,8 @@ function CurrentSong({song, dj, startTime, offset, skips, doVoteSkip, members}) 
   const minutes = song.duration / 60;
   const skipThreshold = 0.6 - 0.3 / (1 + Math.exp(3 - minutes / 3));
   const votesNeeded = Math.ceil(skipThreshold * members.length);
-  const skipTextClassName = classNames({inactive: !skips});
+  const hasVoteSkipped = skips.some(member => member.id === self.id);
+  const skipTextClassName = classNames({inactive: !hasVoteSkipped});
 
   return (
     <div className="current-song-wrap flex-horizontal">
@@ -55,10 +56,10 @@ function CurrentSong({song, dj, startTime, offset, skips, doVoteSkip, members}) 
         </div>
         <div className="skip">
           <button className="btn" onClick={doVoteSkip}>
-            Skip
+            {hasVoteSkipped ? 'Unskip' : 'Skip'}
           </button>
           <span className={skipTextClassName}>
-            {skips}/{votesNeeded} votes
+            {skips.length}/{votesNeeded} votes
           </span>
         </div>
         <SongProgress startTime={startTime + offset} duration={song.duration} />
