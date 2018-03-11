@@ -140,6 +140,7 @@ export default class Bot extends EventEmitter {
           if (!res) {
             message.reply(`Error: You must be in the voice channel to vote to skip songs!`);
           }
+          message.reply('Skip count updated!');
           break;
         }
 

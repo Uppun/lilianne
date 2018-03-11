@@ -145,8 +145,8 @@ class Radio extends EventEmitter {
       this.skips.add(user.id);
     }
 
-    this.checkSkips();
     this.emit('skips', this.skips);
+    this.checkSkips();
     return true;
   }
 
