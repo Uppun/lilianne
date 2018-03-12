@@ -128,26 +128,31 @@ class Radio extends EventEmitter {
     if (this.current) {
       this.skips.delete(user.id);
       this.emit('skips', this.skips);
+      this.checkSkips();
     }
   }
 
   voteSkip(user: Discord.User) {
     if (this.current && user.id === this.current.player.dj.id) {
       this.getNext();
-      return true;
+      return {voteSkipped: true};
     }
 
-    if (!this.order.some(u => u.equals(user))) return false;
+    if (!this.order.some(u => u.equals(user))) return null;
+
+    let returnVal;
 
     if (this.skips.has(user.id)) {
       this.skips.delete(user.id);
+      returnVal = {voteSkipped: false};
     } else {
       this.skips.add(user.id);
+      returnVal = {voteSkipped: true};
     }
 
     this.emit('skips', this.skips);
     this.checkSkips();
-    return true;
+    return returnVal;
   }
 
   checkSkips() {
