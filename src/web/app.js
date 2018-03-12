@@ -18,6 +18,10 @@ export default function webapp(web: Web) {
     io.emit('history', history);
   });
 
+  radio.on('skips', skips => {
+    io.emit('skips', Array.from(skips));
+  });
+
   radio.on('song', (fp, song) => {
     if (song) {
       current = Object.assign({}, song);
@@ -100,6 +104,10 @@ export default function webapp(web: Web) {
       radio.removeSong(user, qid);
     });
 
+    socket.on('skip', () => {
+      radio.voteSkip(user);
+    });
+
     // SEND INIT
     if (current) current.player.currentTime = Date.now();
     const queue = radio.queues.get(id) || [];
@@ -116,6 +124,7 @@ export default function webapp(web: Web) {
         queue: queue.map(({fp, ...item}) => item), // eslint-disable-line no-unused-vars
         current,
         history: radio.history,
+        skips: Array.from(radio.skips),
       });
     }
   });

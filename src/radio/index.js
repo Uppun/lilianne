@@ -127,6 +127,7 @@ class Radio extends EventEmitter {
 
     if (this.current) {
       this.skips.delete(user.id);
+      this.emit('skips', this.skips);
       this.checkSkips();
     }
   }
@@ -134,14 +135,24 @@ class Radio extends EventEmitter {
   voteSkip(user: Discord.User) {
     if (this.current && user.id === this.current.player.dj.id) {
       this.getNext();
-      return true;
+      return {voteSkipped: true};
     }
 
-    if (!this.order.some(u => u.equals(user))) return false;
+    if (!this.order.some(u => u.equals(user))) return null;
 
-    this.skips.add(user.id);
+    let returnVal;
+
+    if (this.skips.has(user.id)) {
+      this.skips.delete(user.id);
+      returnVal = {voteSkipped: false};
+    } else {
+      this.skips.add(user.id);
+      returnVal = {voteSkipped: true};
+    }
+
+    this.emit('skips', this.skips);
     this.checkSkips();
-    return true;
+    return returnVal;
   }
 
   checkSkips() {
@@ -150,7 +161,9 @@ class Radio extends EventEmitter {
     const ratio = skipRatio(this.current.duration);
     const total = this.order.length;
     const needed = Math.ceil(ratio * total);
-    this.emit('skips', this.skips, needed);
+    if (this.skips.size >= needed) {
+      this.getNext();
+    }
   }
 
   addSong(link: string, user: Discord.User): Promise<EventEmitter[]> {

@@ -311,8 +311,11 @@ h2 {
 }
 
 .skip span {
-  display: none;
   margin-left: 6px;
+}
+
+.skip span.inactive {
+  opacity: 0.3;
 }
 
 .progress {

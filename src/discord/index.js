@@ -134,6 +134,22 @@ export default class Bot extends EventEmitter {
             .catch(reason => message.reply(`Oops! Something went wrong! Error: ${reason}`));
           break;
         }
+
+        case '!skip': {
+          const res = radio.voteSkip(message.author);
+
+          if (!res) {
+            message.reply(`Error: You must be in the voice channel to vote to skip songs!`);
+            break;
+          }
+          if (res.voteSkipped) {
+            message.reply(`Vote skip added!`);
+          } else {
+            message.reply('Vote skip removed!');
+          }
+          break;
+        }
+
         default: {
           break; // do nothing
         }
@@ -161,9 +177,13 @@ export default class Bot extends EventEmitter {
     }, 1000);
 
     radio.on('song', (fp, song) => {
-      if (song && this.voiceConnection) {
-        const dispatcher = this.voiceConnection.playFile(fp, {volume: 0});
-        dispatcher.setVolumeDecibels(BASELINE_DB + song.gain);
+      if (this.voiceConnection) {
+        if (song) {
+          const dispatcher = this.voiceConnection.playFile(fp, {volume: 0});
+          dispatcher.setVolumeDecibels(BASELINE_DB + song.gain);
+        } else if (this.voiceConnection.dispatcher) {
+          this.voiceConnection.dispatcher.end();
+        }
       }
       setTopic();
     });

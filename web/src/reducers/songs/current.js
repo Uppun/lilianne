@@ -1,25 +1,32 @@
-import {INITIALIZE, SET_CURRENT_SONG} from '../../actions';
+import {INITIALIZE, SET_CURRENT_SONG, SET_SKIP_STATUS} from '../../actions';
 import {getUid} from './items';
 import {getSong} from '../songs';
 import {getUser} from '../users';
 
-function reduceSong(song) {
+function reduceSong(song, skips = []) {
   if (!song) return null;
   return {
     song: getUid(song),
     dj: song.player.dj.id,
     startTime: song.player.startTime,
     offset: song.player.startTime - song.player.currentTime,
+    skips,
   };
 }
 
 export default function reduceCurrent(state = null, action, songs) {
   switch (action.type) {
     case INITIALIZE:
-      return reduceSong(action.payload.current);
+      return reduceSong(action.payload.current, action.payload.skips);
 
     case SET_CURRENT_SONG:
       return reduceSong(action.payload);
+
+    case SET_SKIP_STATUS:
+      return {
+        ...state,
+        skips: action.payload.skips,
+      };
 
     default:
       return state;
