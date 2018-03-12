@@ -137,6 +137,7 @@ export default class Bot extends EventEmitter {
 
         case '!skip': {
           const res = radio.voteSkip(message.author);
+
           if (!res) {
             message.reply(`Error: You must be in the voice channel to vote to skip songs!`);
             break;
