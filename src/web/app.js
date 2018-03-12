@@ -124,7 +124,7 @@ export default function webapp(web: Web) {
         queue: queue.map(({fp, ...item}) => item), // eslint-disable-line no-unused-vars
         current,
         history: radio.history,
-        skips: radio.skips.size,
+        skips: Array.from(radio.skips),
       });
     }
   });

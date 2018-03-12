@@ -3,7 +3,7 @@ import {getUid} from './items';
 import {getSong} from '../songs';
 import {getUser} from '../users';
 
-function reduceSong(song, skips = 0) {
+function reduceSong(song, skips = []) {
   if (!song) return null;
   return {
     song: getUid(song),
