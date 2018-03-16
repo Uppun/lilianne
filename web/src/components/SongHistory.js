@@ -8,7 +8,7 @@ function SongHistory({songs}) {
     <div className="scroller-wrap">
       <div className="song-history scroller">
         <h2>Song History</h2>
-        {songs.map(item => <SongHistoryItem key={item.song.uid} {...item} />)}
+        {songs.map(item => <SongHistoryItem key={item.startTime} {...item} />)}
       </div>
     </div>
   );
