@@ -39,6 +39,6 @@ export default class YouTube implements Handler {
   }
 
   download(stream: Writable) {
-    return ytdl.downloadFromInfo(this.info, {filter: 'audioonly'}).pipe(stream);
+    return ytdl.downloadFromInfo(this.info, {quality: 'highestaudio'}).pipe(stream);
   }
 }
