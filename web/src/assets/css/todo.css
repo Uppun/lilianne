@@ -47,6 +47,15 @@ h2 {
   background-image: url("https://cdn.discordapp.com/app-icons/165597416433778688/71352fda21f75626f26a6764c0482f79.jpg");
 }
 
+.fadeError-appear {
+  opacity: 0.01;
+}
+
+.fadeError-appear.fadeError-appear-active {
+  opacity: 1;
+  transition: opacity .5s ease-in;
+}
+
 .front-inner {
   width: 500px;
   position: relative;

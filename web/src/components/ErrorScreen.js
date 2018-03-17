@@ -1,26 +1,42 @@
 import React from 'react';
 import Guild from './Guild';
 import {UserAvatar} from './DiscordIcon';
+import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
 
 export default class ErrorScreen extends React.Component {
   render() {
     const props = this.makeInner();
     if (!props) return null;
 
-    return (
-      <div className="front flex-vertical flex-spacer">
-        <div className="application-icon">
-          <div className="application-icon-inner" />
-        </div>
-        <div className="front-inner">
-          <header>
-            <h1>{props.header}</h1>
-          </header>
-          <div className="scroller-wrap">
-            <div className="details scroller">{props.body}</div>
+    const screen = (
+      <div key={props.header}>
+        <div className="front flex-vertical flex-spacer">
+          <div className="application-icon">
+            <div className="application-icon-inner" />
           </div>
-          <footer>{props.footer}</footer>
+          <div className="front-inner">
+            <header>
+              <h1>{props.header}</h1>
+            </header>
+            <div className="scroller-wrap">
+              <div className="details scroller">{props.body}</div>
+            </div>
+            <footer>{props.footer}</footer>
+          </div>
         </div>
+      </div>
+    );
+
+    return (
+      <div>
+        <ReactCSSTransitionGroup
+          transitionName="fadeError"
+          transitionEnter={false}
+          transitionLeave={false}
+          transitionAppear={true}
+          transitionAppearTimeout={500}>
+          {screen}
+        </ReactCSSTransitionGroup>
       </div>
     );
   }
