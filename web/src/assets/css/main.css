@@ -122,3 +122,30 @@ input:disabled {
   flex-shrink: 0;
   vertical-align: top;
 }
+
+.fadeError-appear {
+  opacity: 0;
+}
+
+.fadeError-appear.fadeError-appear-active {
+  opacity: 1;
+  transition: opacity .5s ease-in;
+}
+
+.fadeError-enter {
+  opacity: 0;
+}
+
+.fadeError-enter.fadeError-enter-active {
+  opacity: 1;
+  transition: opacity .5s ease-in;
+}
+
+.fadeError-leave {
+  opacity: 1;
+}
+
+.fadeError-leave.fadeError-leave-active {
+  opacity: 0;
+  transition: opacity .5s ease-out;
+}

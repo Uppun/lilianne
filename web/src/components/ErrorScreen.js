@@ -1,43 +1,37 @@
 import React from 'react';
 import Guild from './Guild';
 import {UserAvatar} from './DiscordIcon';
-import ReactCSSTransitionGroup from 'react-addons-css-transition-group';
+import {CSSTransitionGroup} from 'react-transition-group';
 
 export default class ErrorScreen extends React.Component {
   render() {
     const props = this.makeInner();
     if (!props) return null;
 
-    const screen = (
-      <div key={props.header}>
-        <div className="front flex-vertical flex-spacer">
-          <div className="application-icon">
-            <div className="application-icon-inner" />
-          </div>
-          <div className="front-inner">
-            <header>
-              <h1>{props.header}</h1>
-            </header>
-            <div className="scroller-wrap">
-              <div className="details scroller">{props.body}</div>
+    return (
+      <CSSTransitionGroup
+        transitionName="fadeError"
+        transitionEnterTimeout={500}
+        transitionLeaveTimeout={500}
+        transitionAppear
+        transitionAppearTimeout={500}>
+        <div>
+          <div className="front flex-vertical flex-spacer">
+            <div className="application-icon">
+              <div className="application-icon-inner" />
             </div>
-            <footer>{props.footer}</footer>
+            <div className="front-inner">
+              <header>
+                <h1>{props.header}</h1>
+              </header>
+              <div className="scroller-wrap">
+                <div className="details scroller">{props.body}</div>
+              </div>
+              <footer>{props.footer}</footer>
+            </div>
           </div>
         </div>
-      </div>
-    );
-
-    return (
-      <div>
-        <ReactCSSTransitionGroup
-          transitionName="fadeError"
-          transitionEnter={false}
-          transitionLeave={false}
-          transitionAppear={true}
-          transitionAppearTimeout={500}>
-          {screen}
-        </ReactCSSTransitionGroup>
-      </div>
+      </CSSTransitionGroup>
     );
   }
 
