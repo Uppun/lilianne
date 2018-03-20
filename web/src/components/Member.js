@@ -1,5 +1,4 @@
 import React from 'react';
-//import './Member.css';
 import classNames from 'classnames';
 
 import {UserAvatar} from './DiscordIcon';

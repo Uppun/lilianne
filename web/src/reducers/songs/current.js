@@ -14,7 +14,7 @@ function reduceSong(song, skips = []) {
   };
 }
 
-export default function reduceCurrent(state = null, action, songs) {
+export default function reduceCurrent(state = null, action, _songs) {
   switch (action.type) {
     case INITIALIZE:
       return reduceSong(action.payload.current, action.payload.skips);

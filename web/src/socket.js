@@ -3,7 +3,7 @@ import * as actions from './actions';
 
 let socket;
 
-export const socketMiddleware = store => next => action => {
+export const socketMiddleware = _store => next => action => {
   if (socket) {
     switch (action.type) {
       case actions.ADD_SONG:
@@ -43,7 +43,6 @@ export default store => {
 
   socket.on('load', data => {
     store.dispatch(actions.initialize(data));
-    //$('.front').fadeOut();
   });
 
   socket.on('song', song => {

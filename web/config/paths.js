@@ -1,12 +1,7 @@
-'use strict';
-
 const path = require('path');
 const fs = require('fs');
 const url = require('url');
 
-// Make sure any symlinks in the project folder are resolved:
-// https://github.com/facebookincubator/create-react-app/issues/637
-//const appDirectory = fs.realpathSync(process.cwd());
 const appDirectory = fs.realpathSync(path.dirname(__dirname));
 const resolveApp = relativePath => path.resolve(appDirectory, relativePath);
 
@@ -33,8 +28,7 @@ const getPublicUrl = homepage => envPublicUrl || homepage;
 // like /todos/42/static/js/bundle.7289d.js. We have to know the root.
 function getServedPath(homepage) {
   const publicUrl = getPublicUrl(homepage);
-  const servedUrl = envPublicUrl ||
-    (publicUrl ? url.parse(publicUrl).pathname : '/');
+  const servedUrl = envPublicUrl || (publicUrl ? url.parse(publicUrl).pathname : '/');
   return ensureSlash(servedUrl, true);
 }
 

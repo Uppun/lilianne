@@ -14,6 +14,8 @@ export default function reduceHistory(state = [], action, songs) {
 
     case SET_CURRENT_SONG: {
       if (!songs.current) return state;
+
+      // eslint-disable-next-line no-unused-vars
       const {offset, ...current} = songs.current;
       return [current, ...state];
     }
