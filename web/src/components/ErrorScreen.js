@@ -27,7 +27,7 @@ export default class ErrorScreenWrapper extends React.Component {
     );
   }
 
-  renderNoAccess() {
+  renderNoAccess(data) {
     return (
       <ErrorScreen
         header="Access denied!"
@@ -92,7 +92,7 @@ export default class ErrorScreenWrapper extends React.Component {
       case 'not connected':
         return this.renderNoConnection();
       case 'not in server':
-        return this.renderNoAccess();
+        return this.renderNoAccess(data);
       case 'disconnected':
         return this.renderDisconnected();
       default:
