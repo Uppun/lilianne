@@ -149,6 +149,7 @@ module.exports = Object.assign(baseConfig, {
                   options: {
                     ident: 'postcss',
                     plugins: () => [
+                      // prettier-ignore
                       require('postcss-flexbugs-fixes'),
                       autoprefixer(),
                     ],
@@ -180,7 +181,7 @@ module.exports = Object.assign(baseConfig, {
         minifyURLs: true,
       },
     }),
-    
+
     new InterpolateHtmlPlugin(env.raw),
 
     new webpack.DefinePlugin(env.stringified),

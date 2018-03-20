@@ -119,6 +119,7 @@ module.exports = Object.assign(baseConfig, {
             options: {
               ident: 'postcss',
               plugins: () => [
+                // prettier-ignore
                 require('postcss-flexbugs-fixes'),
                 autoprefixer(),
               ],
