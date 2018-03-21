@@ -56,7 +56,7 @@ export default class ErrorScreenWrapper extends React.Component {
       </form>
     );
     return (
-      <ErrorScreen header="Access denied!" footer>
+      <ErrorScreen header="Access denied!" footer={footer}>
         <div>
           <section>
             You need to be on:
