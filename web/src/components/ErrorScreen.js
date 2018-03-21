@@ -59,7 +59,7 @@ export default class ErrorScreenWrapper extends React.Component {
   }
 
   renderNoAccess() {
-    errorFooter = (
+    const errorFooter = (
       <form method="POST" action="logout">
         <button className="primary" type="submit">
           Re-authenticate
