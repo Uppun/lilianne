@@ -3,7 +3,7 @@ import Guild from './Guild';
 import {UserAvatar} from './DiscordIcon';
 import {CSSTransitionGroup} from 'react-transition-group';
 
-const ErrorScreen = props => {
+function ErrorScreen({header, footer, children}) {
   return (
     <div>
       <div className="front flex-vertical flex-spacer">
@@ -12,12 +12,12 @@ const ErrorScreen = props => {
         </div>
         <div className="front-inner">
           <header>
-            <h1>{props.header}</h1>
+            <h1>{header}</h1>
           </header>
           <div className="scroller-wrap">
-            <div className="details scroller">{props.children}</div>
+            <div className="details scroller">{children}</div>
           </div>
-          <footer>{props.footer}</footer>
+          <footer>{footer}</footer>
         </div>
       </div>
     </div>
@@ -25,16 +25,6 @@ const ErrorScreen = props => {
 };
 
 export default class ErrorScreenWrapper extends React.Component {
-  renderUnknownError() {
-    return (
-      <ErrorScreen header="Wha?!">
-        <section>
-          <p>???</p>
-        </section>
-      </ErrorScreen>
-    );
-  }
-
   renderNoAuth() {
     return (
       <ErrorScreen header="Huh?!">
@@ -47,19 +37,18 @@ export default class ErrorScreenWrapper extends React.Component {
     );
   }
 
-  renderDisconnected() {
+  renderNoConnection() {
     return (
-      <ErrorScreen header="Disconnected!">
+      <ErrorScreen header="I fell asleep!">
         <section>
-          <p>Sorry! I might have gone to sleep for the night!</p>
-          <p>If you know I'm supposed to be awake, try giving this page a refresh!</p>
+          <p>Give me a couple of seconds to wake up, then try refreshing the page!</p>
         </section>
       </ErrorScreen>
     );
   }
 
   renderNoAccess() {
-    const errorFooter = (
+    const footer = (
       <form method="POST" action="logout">
         <button className="primary" type="submit">
           Re-authenticate
@@ -67,7 +56,7 @@ export default class ErrorScreenWrapper extends React.Component {
       </form>
     );
     return (
-      <ErrorScreen header="Access denied!" footer={errorFooter}>
+      <ErrorScreen header="Access denied!" {footer}>
         <div>
           <section>
             You need to be on:
@@ -101,11 +90,23 @@ export default class ErrorScreenWrapper extends React.Component {
     );
   }
 
-  renderNoConnection() {
+  renderDisconnected() {
     return (
-      <ErrorScreen header="I fell asleep!">
+      <ErrorScreen header="Disconnected!">
         <section>
-          <p>Give me a couple of seconds to wake up, then try refreshing the page!</p>
+          <p>Sorry! I might have gone to sleep for the night!</p>
+          <p>If you know I'm supposed to be awake, try giving this page a refresh!</p>
+        </section>
+      </ErrorScreen>
+    );
+  }
+
+  renderUnknownError() {
+    // TODO
+    return (
+      <ErrorScreen header="Wha?!">
+        <section>
+          <p>???</p>
         </section>
       </ErrorScreen>
     );
