@@ -123,29 +123,20 @@ input:disabled {
   vertical-align: top;
 }
 
-.fadeError-appear {
+.transitionError-enter {
   opacity: 0;
 }
 
-.fadeError-appear.fadeError-appear-active {
+.transitionError-enter.transitionError-enter-active {
   opacity: 1;
   transition: opacity .5s ease-in;
 }
 
-.fadeError-enter {
-  opacity: 0;
-}
-
-.fadeError-enter.fadeError-enter-active {
-  opacity: 1;
-  transition: opacity .5s ease-in;
-}
-
-.fadeError-leave {
+.transitionError-leave {
   opacity: 1;
 }
 
-.fadeError-leave.fadeError-leave-active {
+.transitionError-leave.transitionError-leave-active {
   opacity: 0;
   transition: opacity .5s ease-out;
 }

@@ -3,7 +3,38 @@ import Guild from './Guild';
 import {UserAvatar} from './DiscordIcon';
 import {CSSTransitionGroup} from 'react-transition-group';
 
+const ErrorScreen = props => {
+  return (
+    <div>
+      <div className="front flex-vertical flex-spacer">
+        <div className="application-icon">
+          <div className="application-icon-inner" />
+        </div>
+        <div className="front-inner">
+          <header>
+            <h1>{props.header}</h1>
+          </header>
+          <div className="scroller-wrap">
+            <div className="details scroller">{props.children}</div>
+          </div>
+          <footer>{props.footer}</footer>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export default class ErrorScreenWrapper extends React.Component {
+  renderUnknownError() {
+    return (
+      <ErrorScreen header="Wha?!">
+        <section>
+          <p>???</p>
+        </section>
+      </ErrorScreen>
+    );
+  }
+
   renderNoAuth() {
     return (
       <ErrorScreen header="Huh?!">
@@ -27,17 +58,16 @@ export default class ErrorScreenWrapper extends React.Component {
     );
   }
 
-  renderNoAccess(data) {
+  renderNoAccess() {
+    errorFooter = (
+      <form method="POST" action="logout">
+        <button className="primary" type="submit">
+          Re-authenticate
+        </button>
+      </form>
+    );
     return (
-      <ErrorScreen
-        header="Access denied!"
-        footer={
-          <form method="POST" action="logout">
-            <button className="primary" type="submit">
-              Re-authenticate
-            </button>
-          </form>
-        }>
+      <ErrorScreen header="Access denied!" footer={errorFooter}>
         <div>
           <section>
             You need to be on:
@@ -47,12 +77,12 @@ export default class ErrorScreenWrapper extends React.Component {
           <section>
             You are logged in as:
             <div className="member">
-              <UserAvatar user={data.user.id} avatar={data.user.avatar} />
+              <UserAvatar user={this.props.data.user.id} avatar={this.props.data.user.avatar} />
               <div className="member-inner">
                 <div className="member-username">
-                  <span className="member-username-inner">{data.user.username}</span>
+                  <span className="member-username-inner">{this.props.data.user.username}</span>
                 </div>
-                <span className="member-discriminator">#{data.user.discriminator}</span>
+                <span className="member-discriminator">#{this.props.data.user.discriminator}</span>
               </div>
             </div>
           </section>
@@ -81,8 +111,8 @@ export default class ErrorScreenWrapper extends React.Component {
     );
   }
 
-  renderErrorScreen(props) {
-    const {type, data} = props;
+  renderErrorScreen() {
+    const {type} = this.props;
 
     if (!type || type === 'none') return null;
 
@@ -92,47 +122,19 @@ export default class ErrorScreenWrapper extends React.Component {
       case 'not connected':
         return this.renderNoConnection();
       case 'not in server':
-        return this.renderNoAccess(data);
+        return this.renderNoAccess();
       case 'disconnected':
         return this.renderDisconnected();
       default:
-        return null;
+        return this.renderUnknownError();
     }
   }
-  render() {
-    return (
-      <CSSTransitionGroup
-        transitionName="fadeError"
-        transitionEnterTimeout={500}
-        transitionLeaveTimeout={500}
-        transitionAppear
-        transitionAppearTimeout={500}>
-        {this.renderErrorScreen(this.props)}
-      </CSSTransitionGroup>
-    );
-  }
-}
-class ErrorScreen extends React.Component {
-  render() {
-    if (!this.props) return null;
 
+  render() {
     return (
-      <div>
-        <div className="front flex-vertical flex-spacer">
-          <div className="application-icon">
-            <div className="application-icon-inner" />
-          </div>
-          <div className="front-inner">
-            <header>
-              <h1>{this.props.header}</h1>
-            </header>
-            <div className="scroller-wrap">
-              <div className="details scroller">{this.props.children}</div>
-            </div>
-            <footer>{this.props.footer}</footer>
-          </div>
-        </div>
-      </div>
+      <CSSTransitionGroup transitionName="transitionError" transitionEnterTimeout={500} transitionLeaveTimeout={500}>
+        {this.renderErrorScreen()}
+      </CSSTransitionGroup>
     );
   }
 }
