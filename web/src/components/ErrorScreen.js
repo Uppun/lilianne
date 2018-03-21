@@ -22,7 +22,7 @@ function ErrorScreen({header, footer, children}) {
       </div>
     </div>
   );
-};
+}
 
 export default class ErrorScreenWrapper extends React.Component {
   renderNoAuth() {
