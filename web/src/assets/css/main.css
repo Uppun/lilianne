@@ -122,3 +122,21 @@ input:disabled {
   flex-shrink: 0;
   vertical-align: top;
 }
+
+.transitionError-enter {
+  opacity: 0;
+}
+
+.transitionError-enter.transitionError-enter-active {
+  opacity: 1;
+  transition: opacity .5s ease-in;
+}
+
+.transitionError-leave {
+  opacity: 1;
+}
+
+.transitionError-leave.transitionError-leave-active {
+  opacity: 0;
+  transition: opacity .5s ease-out;
+}
