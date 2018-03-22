@@ -7,13 +7,6 @@ import YouTube from './handlers/youtube';
 
 const handlers: * = [SoundCloud, YouTube];
 
-export interface Handler {
-  // constructor(link: string, config: $PropertyType<ConfigOptions, 'services'>);
-  // static match(link: string): boolean;
-  getMeta(): Promise<SongInfo>;
-  download(stream: Writable): Writable;
-}
-
 export type SongInfo = {
   id: string,
   title: string,
@@ -26,6 +19,13 @@ export type SongInfo = {
     url: string,
   },
 };
+
+export interface Handler {
+  // constructor(link: string, config: $PropertyType<ConfigOptions, 'services'>);
+  // static match(link: string): boolean;
+  getMeta(): Promise<SongInfo>;
+  download(stream: Writable): Writable;
+}
 
 export function getHandler(link: string, config: ConfigOptions): ?Handler {
   for (const Handler of handlers) {

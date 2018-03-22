@@ -1,10 +1,23 @@
 {
   "env": {
     "browser": true,
+    "commonjs": true,
+    "es6": true,
     "node": false
   },
-  "extends": ["react-app", "standard-jsx"],
+  "plugins": ["react", "jsx-a11y"],
+  "extends": ["standard-jsx", "plugin:react/recommended", "plugin:jsx-a11y/recommended"],
   "rules": {
-    "jsx-quotes": ["error", "prefer-double"]
-  }
+    "jsx-quotes": ["error", "prefer-double"],
+    "react/no-unescaped-entities": ["error", {"forbid": [">", "}"]}],
+    "react/prop-types": "off"
+  },
+  "overrides": [
+    {
+      "files": ["config/**/*.js"],
+      "env": {
+        "node": true
+      }
+    }
+  ]
 }

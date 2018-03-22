@@ -1,8 +1,6 @@
 const NODE_ENV = process.env.NODE_ENV;
 if (!NODE_ENV) {
-  throw new Error(
-    'The NODE_ENV environment variable is required but was not specified.'
-  );
+  throw new Error('The NODE_ENV environment variable is required but was not specified.');
 }
 
 // Grab NODE_ENV and REACT_APP_* environment variables and prepare them to be
@@ -30,16 +28,13 @@ function getClientEnvironment(publicUrl) {
     );
   // Stringify all values so we can feed into Webpack DefinePlugin
   const stringified = {
-    'process.env': Object.keys(raw).reduce(
-      (env, key) => {
-        env[key] = JSON.stringify(raw[key]);
-        return env;
-      },
-      {}
-    ),
+    'process.env': Object.keys(raw).reduce((env, key) => {
+      env[key] = JSON.stringify(raw[key]);
+      return env;
+    }, {}),
   };
 
-  return { raw, stringified };
+  return {raw, stringified};
 }
 
 module.exports = getClientEnvironment;

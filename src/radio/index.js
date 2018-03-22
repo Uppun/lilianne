@@ -31,6 +31,14 @@ export const QueueItemStatus = {
   DONE: 5,
 };
 
+export type UserInfo = {
+  name: string,
+  username: string,
+  discriminator: string,
+  id: string,
+  avatar: string,
+};
+
 export type SongInfoExtended = SongInfo & {
   service: string,
   gain: number,
@@ -39,14 +47,6 @@ export type SongInfoExtended = SongInfo & {
     startTime: number, // in ms
     currentTime?: number, // in ms
   },
-};
-
-export type UserInfo = {
-  name: string,
-  username: string,
-  discriminator: string,
-  id: string,
-  avatar: string,
 };
 
 function skipRatio(length: number) {
@@ -296,7 +296,9 @@ class Radio extends EventEmitter {
                 try {
                   cachedSong = JSON.parse(res[1]);
                   return cachedSong.gain;
-                } catch (e) {}
+                } catch (e) {
+                  // If it failed, start processing.
+                }
 
                 queueItem.status = QueueItemStatus.PROCESSING;
                 emitUpdate();

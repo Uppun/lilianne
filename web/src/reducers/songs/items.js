@@ -4,7 +4,7 @@ export function getUid(song) {
   return `${song.service}-${song.id}`;
 }
 
-export default function reduceItems(state = {}, action, songs) {
+export default function reduceItems(state = {}, action, _songs) {
   switch (action.type) {
     case INITIALIZE: {
       const newState = {};
