@@ -179,7 +179,7 @@ export default class Bot extends EventEmitter {
     radio.on('song', (fp, song) => {
       if (this.voiceConnection) {
         if (song) {
-          const dispatcher = this.voiceConnection.playFile(fp, {volume: 0});
+          const dispatcher = this.voiceConnection.play(fp, {volume: 0});
           dispatcher.setVolumeDecibels(BASELINE_DB + song.gain);
         } else if (this.voiceConnection.dispatcher) {
           this.voiceConnection.dispatcher.end();
